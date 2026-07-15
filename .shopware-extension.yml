@@ -1,0 +1,25 @@
+compatibility_date: "2026-07-14"
+
+changelog:
+    enabled: true
+
+build:
+    zip:
+        assets:
+            enable_es_build_for_admin: false
+            enable_es_build_for_storefront: false
+        pack:
+            excludes:
+                paths:
+                    - .github
+                    - .phpunit.cache
+                    - .gitignore
+                    - .gitattributes
+                    - .shopware-extension.yml
+                    - .release-please-manifest.json
+                    - release-please-config.json
+                    - CHANGELOG.md
+                    - dev
+                    - tests
+                    - docs
+                    - phpunit.xml.dist

@@ -1,0 +1,12 @@
+{
+    "packages": {
+        ".": {
+            "release-type": "php",
+            "package-name": "laioutr/shopware-connector",
+            "initial-version": "1.0.0",
+            "include-component-in-tag": false,
+            "include-v-in-tag": true,
+            "changelog-path": "CHANGELOG.md"
+        }
+    }
+}

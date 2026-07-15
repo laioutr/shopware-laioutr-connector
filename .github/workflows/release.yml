@@ -1,0 +1,252 @@
+name: Release
+
+on:
+    push:
+        branches:
+            - main
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: Existing vX.Y.Z release tag to repackage
+                required: true
+                type: string
+
+concurrency:
+    group: release-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+    cancel-in-progress: false
+
+jobs:
+    release-please:
+        name: Prepare release
+        if: github.event_name == 'push'
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        permissions:
+            contents: write
+            issues: write
+            pull-requests: write
+        outputs:
+            release-created: ${{ steps.release.outputs.release_created }}
+            tag-name: ${{ steps.release.outputs.tag_name }}
+            version: ${{ steps.release.outputs.version }}
+            sha: ${{ steps.release.outputs.sha }}
+        steps:
+            - name: Run Release Please
+              id: release
+              uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+              with:
+                  token: ${{ github.token }}
+                  config-file: release-please-config.json
+                  manifest-file: .release-please-manifest.json
+
+    manual-release:
+        name: Resolve existing release
+        if: github.event_name == 'workflow_dispatch'
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        permissions:
+            contents: read
+        outputs:
+            tag-name: ${{ steps.release.outputs.tag-name }}
+            version: ${{ steps.release.outputs.version }}
+            sha: ${{ steps.release.outputs.sha }}
+        steps:
+            - name: Check out repository
+              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              with:
+                  fetch-depth: 0
+
+            - name: Validate release tag
+              id: release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  TAG_NAME: ${{ inputs.tag }}
+              run: |
+                  if [[ ! "$TAG_NAME" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+                      echo "Expected a semantic version tag such as v1.2.3" >&2
+                      exit 1
+                  fi
+
+                  gh release view "$TAG_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null
+                  git rev-parse --verify "refs/tags/$TAG_NAME" >/dev/null
+
+                  echo "tag-name=$TAG_NAME" >> "$GITHUB_OUTPUT"
+                  echo "version=${TAG_NAME#v}" >> "$GITHUB_OUTPUT"
+                  echo "sha=$(git rev-list -n 1 "$TAG_NAME")" >> "$GITHUB_OUTPUT"
+
+    package:
+        name: Package GitHub release
+        needs:
+            - release-please
+            - manual-release
+        if: >-
+            ${{
+                always()
+                && (
+                    needs.release-please.outputs.release-created == 'true'
+                    || needs.manual-release.result == 'success'
+                )
+            }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        permissions:
+            contents: write
+            id-token: write
+            attestations: write
+            artifact-metadata: write
+        outputs:
+            artifact-name: ${{ steps.metadata.outputs.artifact-name }}
+            archive-name: ${{ steps.metadata.outputs.archive-name }}
+            tag-name: ${{ steps.metadata.outputs.tag-name }}
+        steps:
+            - name: Check out released revision
+              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              with:
+                  fetch-depth: 0
+                  ref: ${{ needs.release-please.outputs.sha || needs.manual-release.outputs.sha }}
+
+            - name: Install Shopware CLI
+              uses: shopware/shopware-cli-action@b67b48ccb52beb8533ea276152e1f89f29bbd080 # v3.0.0
+              with:
+                  version: 0.16.7
+
+            - name: Verify release metadata
+              id: metadata
+              env:
+                  RELEASE_SHA: ${{ needs.release-please.outputs.sha || needs.manual-release.outputs.sha }}
+                  RELEASE_VERSION: ${{ needs.release-please.outputs.version || needs.manual-release.outputs.version }}
+                  TAG_NAME: ${{ needs.release-please.outputs.tag-name || needs.manual-release.outputs.tag-name }}
+              run: |
+                  if [[ ! "$TAG_NAME" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+                      echo "Invalid release tag: $TAG_NAME" >&2
+                      exit 1
+                  fi
+
+                  VERSION="${TAG_NAME#v}"
+                  COMPOSER_VERSION="$(jq -r '.version' composer.json)"
+                  CURRENT_SHA="$(git rev-parse HEAD)"
+                  TAG_SHA="$(git rev-list -n 1 "$TAG_NAME")"
+
+                  test "$VERSION" = "$RELEASE_VERSION"
+                  test "$VERSION" = "$COMPOSER_VERSION"
+                  test "$CURRENT_SHA" = "$RELEASE_SHA"
+                  test "$TAG_SHA" = "$RELEASE_SHA"
+
+                  ARCHIVE_NAME="LaioutrConnector-${TAG_NAME}.zip"
+                  echo "archive-name=$ARCHIVE_NAME" >> "$GITHUB_OUTPUT"
+                  echo "artifact-name=LaioutrConnector-${TAG_NAME}" >> "$GITHUB_OUTPUT"
+                  echo "tag-name=$TAG_NAME" >> "$GITHUB_OUTPUT"
+                  echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+            - name: Build release ZIP
+              env:
+                  ARCHIVE_NAME: ${{ steps.metadata.outputs.archive-name }}
+                  TAG_NAME: ${{ steps.metadata.outputs.tag-name }}
+                  VERSION: ${{ steps.metadata.outputs.version }}
+              run: |
+                  mkdir -p dist
+                  shopware-cli extension zip . \
+                      --git-commit "$TAG_NAME" \
+                      --overwrite-version "$VERSION" \
+                      --release \
+                      --filename "$ARCHIVE_NAME" \
+                      --output-directory dist
+
+            - name: Validate release ZIP
+              env:
+                  ARCHIVE_NAME: ${{ steps.metadata.outputs.archive-name }}
+                  VERSION: ${{ steps.metadata.outputs.version }}
+              run: |
+                  ARCHIVE="dist/$ARCHIVE_NAME"
+                  shopware-cli extension validate "$ARCHIVE" --reporter github
+
+                  unzip -Z1 "$ARCHIVE" > dist/archive-entries.txt
+                  if grep -Ev '^LaioutrConnector/' dist/archive-entries.txt; then
+                      echo "Archive contains entries outside LaioutrConnector/" >&2
+                      exit 1
+                  fi
+
+                  if grep -E '(^|/)(dev|tests|vendor|docs|\.github|\.git|\.env|\.phpunit)(/|$)|release-please|phpunit\.xml|(^|/)CHANGELOG\.md$' dist/archive-entries.txt; then
+                      echo "Archive contains development or release-management files" >&2
+                      exit 1
+                  fi
+
+                  unzip -p "$ARCHIVE" LaioutrConnector/composer.json \
+                      | jq -e --arg version "$VERSION" '.version == $version' >/dev/null
+                  unzip -p "$ARCHIVE" LaioutrConnector/CHANGELOG_en-GB.md \
+                      | grep -Fx "# $VERSION" >/dev/null
+
+            - name: Create checksum
+              working-directory: dist
+              env:
+                  ARCHIVE_NAME: ${{ steps.metadata.outputs.archive-name }}
+              run: sha256sum "$ARCHIVE_NAME" > "$ARCHIVE_NAME.sha256"
+
+            - name: Attest release ZIP
+              uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763 # v4.1.1
+              with:
+                  subject-path: dist/${{ steps.metadata.outputs.archive-name }}
+
+            - name: Upload workflow artifact
+              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+              with:
+                  name: ${{ steps.metadata.outputs.artifact-name }}
+                  path: |
+                      dist/${{ steps.metadata.outputs.archive-name }}
+                      dist/${{ steps.metadata.outputs.archive-name }}.sha256
+                  if-no-files-found: error
+                  retention-days: 30
+
+            - name: Attach files to GitHub Release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  ARCHIVE_NAME: ${{ steps.metadata.outputs.archive-name }}
+                  TAG_NAME: ${{ steps.metadata.outputs.tag-name }}
+              run: >-
+                  gh release upload "$TAG_NAME"
+                  "dist/$ARCHIVE_NAME"
+                  "dist/$ARCHIVE_NAME.sha256"
+                  --clobber
+                  --repo "$GITHUB_REPOSITORY"
+
+    shopware-store:
+        name: Publish to Shopware Store
+        needs:
+            - package
+        if: >-
+            needs.package.result == 'success'
+            && github.event_name == 'push'
+            && vars.SHOPWARE_STORE_PUBLISH_ENABLED == 'true'
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        environment: shopware-store
+        permissions:
+            contents: read
+        steps:
+            - name: Download release artifact
+              uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+              with:
+                  name: ${{ needs.package.outputs.artifact-name }}
+                  path: dist
+
+            - name: Verify checksum
+              working-directory: dist
+              env:
+                  ARCHIVE_NAME: ${{ needs.package.outputs.archive-name }}
+              run: sha256sum --check "$ARCHIVE_NAME.sha256"
+
+            - name: Install Shopware CLI
+              uses: shopware/shopware-cli-action@b67b48ccb52beb8533ea276152e1f89f29bbd080 # v3.0.0
+              with:
+                  version: 0.16.7
+
+            - name: Upload extension
+              env:
+                  SHOPWARE_CLI_ACCOUNT_CLIENT_ID: ${{ secrets.SHOPWARE_CLI_ACCOUNT_CLIENT_ID }}
+                  SHOPWARE_CLI_ACCOUNT_CLIENT_SECRET: ${{ secrets.SHOPWARE_CLI_ACCOUNT_CLIENT_SECRET }}
+                  ARCHIVE_NAME: ${{ needs.package.outputs.archive-name }}
+              run: >-
+                  shopware-cli --no-interaction
+                  account producer extension upload
+                  "dist/$ARCHIVE_NAME"
+                  --skip-for-review-result

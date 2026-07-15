@@ -1,0 +1,58 @@
+{
+    "name": "laioutr/shopware-connector",
+    "description": "Laioutr integration for Shopware",
+    "type": "shopware-platform-plugin",
+    "version": "1.0.0",
+    "license": "MIT",
+    "homepage": "https://github.com/laioutr/shopware-laioutr-connector",
+    "support": {
+        "issues": "https://github.com/laioutr/shopware-laioutr-connector/issues",
+        "source": "https://github.com/laioutr/shopware-laioutr-connector"
+    },
+    "authors": [
+        {
+            "name": "Laioutr",
+            "homepage": "https://laioutr.com",
+            "role": "Manufacturer"
+        }
+    ],
+    "require": {
+        "php": "~8.2.0 || ~8.3.0 || ~8.4.0 || ~8.5.0",
+        "shopware/core": "~6.6.0",
+        "shopware/storefront": "~6.6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Laioutr\\Connector\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Laioutr\\Connector\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "shopware-plugin-class": "Laioutr\\Connector\\LaioutrConnector",
+        "plugin-icon": "src/Resources/public/plugin.png",
+        "copyright": "Laioutr",
+        "label": {
+            "de-DE": "Laioutr Connector",
+            "en-GB": "Laioutr Connector"
+        },
+        "description": {
+            "de-DE": "Verbindet Shopware mit Laioutr und stellt die Sitzungsübergabe, validierte Callback-Weiterleitungen und Einbettungsunterstützung für integrierte Storefront-Abläufe bereit.",
+            "en-GB": "Connects Shopware with Laioutr and provides session handoff, validated callback redirects, and flexible iframe embedding support for integrated storefront workflows."
+        },
+        "manufacturerLink": {
+            "de-DE": "https://laioutr.com",
+            "en-GB": "https://laioutr.com"
+        },
+        "supportLink": {
+            "de-DE": "https://github.com/laioutr/shopware-laioutr-connector/issues",
+            "en-GB": "https://github.com/laioutr/shopware-laioutr-connector/issues"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

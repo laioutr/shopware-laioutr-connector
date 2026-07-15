@@ -1,0 +1,3 @@
+laioutr_connector:
+    resource: ../../Session/Storefront/Controller/*Controller.php
+    type: attribute

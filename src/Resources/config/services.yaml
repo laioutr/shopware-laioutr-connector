@@ -1,0 +1,21 @@
+services:
+    _defaults:
+        autowire: true
+
+    Laioutr\Connector\Session\Storefront\Controller\ConnectController:
+        public: true
+
+    Laioutr\Connector\Session\Storefront\Controller\CookieRedirectController:
+        public: true
+
+    Laioutr\Connector\Session\Subscriber\AuthSubscriber:
+        tags:
+            - kernel.event_subscriber
+
+    Laioutr\Connector\Session\Subscriber\RouteSubscriber:
+        tags:
+            - kernel.event_subscriber
+
+    Laioutr\Connector\Session\Integration\SessionStorage: ~
+    Laioutr\Connector\Session\Integration\CallbackRedirector: ~
+    Laioutr\Connector\Session\Business\DomainWhitelistValidator: ~
