@@ -32,4 +32,4 @@ Global `X-Frame-Options` removal is currently required for the embedded integrat
 
 - Add a versioned protocol contract shared with the Laioutr consumer.
 - Add end-to-end browser tests for login, authenticated account navigation, logout, and blocked third-party-cookie behavior.
-- Add supported Shopware 6.6/PHP CI matrices and a separate Shopware 6.7 migration track before widening Composer constraints.
+- Maintain CI coverage for both supported Shopware 6.6 and 6.7 release lines.
