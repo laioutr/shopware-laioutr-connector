@@ -18,15 +18,9 @@ concurrency:
 
 jobs:
     lint:
-        name: Lint and validate (${{ matrix.compatibility }})
+        name: Lint and validate
         runs-on: ubuntu-latest
         timeout-minutes: 30
-        strategy:
-            fail-fast: false
-            matrix:
-                compatibility:
-                    - lowest
-                    - highest
         steps:
             - name: Check out repository
               uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -52,11 +46,20 @@ jobs:
             - name: Check extension formatting
               run: shopware-cli extension format --dry-run .
 
-            - name: Validate ${{ matrix.compatibility }} Shopware compatibility
+            - name: Validate lowest Shopware compatibility
               run: >-
                   shopware-cli extension validate
                   --full
-                  --check-against "${{ matrix.compatibility }}"
+                  --check-against lowest
+                  --reporter github
+                  .
+
+            - name: Validate highest Shopware compatibility
+              if: ${{ success() || failure() }}
+              run: >-
+                  shopware-cli extension validate
+                  --full
+                  --check-against highest
                   --reporter github
                   .
 
