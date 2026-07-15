@@ -65,92 +65,18 @@ jobs:
 
     phpunit:
         name: PHPUnit (Shopware ${{ matrix.shopware }}, PHP 8.4)
-        runs-on: ubuntu-latest
-        timeout-minutes: 60
         strategy:
             fail-fast: false
             matrix:
                 include:
                     - shopware: "6.6"
-                      shopware_constraint: "~6.6.0"
+                      shopware_version: "v6.6.10.20"
                     - shopware: "6.7"
-                      shopware_constraint: "~6.7.0"
-        services:
-            database:
-                image: mariadb:11.8
-                env:
-                    MARIADB_DATABASE: shopware
-                    MARIADB_ROOT_PASSWORD: root
-                ports:
-                    - 3306:3306
-                options: >-
-                    --health-cmd "mariadb-admin ping -h localhost -proot"
-                    --health-interval 5s
-                    --health-timeout 2s
-                    --health-retries 20
-        env:
-            APP_ENV: test
-            APP_DEBUG: "1"
-            APP_SECRET: ci-test-secret-not-for-production
-            APP_URL: http://localhost
-            BLUE_GREEN_DEPLOYMENT: "0"
-            DATABASE_URL: mysql://root:root@127.0.0.1:3306/shopware
-            FORCE_INSTALL: "1"
-            INSTANCE_ID: 00000000000000000000000000000001
-            LOCK_DSN: flock
-            MAILER_DSN: null://null
-            PROJECT_ROOT: ${{ github.workspace }}/dev
-            SYMFONY_DEPRECATIONS_HELPER: weak
-        defaults:
-            run:
-                working-directory: dev
-        steps:
-            - name: Check out repository
-              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-
-            - name: Set up PHP
-              uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
-              with:
-                  php-version: "8.4"
-                  extensions: curl, dom, fileinfo, gd, intl, mbstring, openssl, pdo, pdo_mysql, simplexml, xml, xmlwriter, zip
-                  tools: composer:v2
-                  coverage: none
-
-            - name: Expose plugin to Shopware
-              working-directory: ${{ github.workspace }}
-              run: ln -s "$GITHUB_WORKSPACE" "$GITHUB_WORKSPACE/dev/custom/plugins/LaioutrConnector"
-
-            - name: Find Composer cache directory
-              id: composer-cache
-              run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
-
-            - name: Cache Composer downloads
-              uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-              with:
-                  path: ${{ steps.composer-cache.outputs.dir }}
-                  key: ${{ runner.os }}-php-8.4-shopware-${{ matrix.shopware }}-composer-${{ hashFiles('dev/composer.lock') }}
-                  restore-keys: |
-                      ${{ runner.os }}-php-8.4-shopware-${{ matrix.shopware }}-composer-
-
-            - name: Resolve Shopware ${{ matrix.shopware }} dependencies
-              env:
-                  SHOPWARE_CONSTRAINT: ${{ matrix.shopware_constraint }}
-              run: >-
-                  composer require
-                  "shopware/administration:${SHOPWARE_CONSTRAINT}"
-                  "shopware/core:${SHOPWARE_CONSTRAINT}"
-                  "shopware/storefront:${SHOPWARE_CONSTRAINT}"
-                  --with-all-dependencies
-                  --no-interaction
-                  --no-progress
-                  --prefer-dist
-                  --no-scripts
-
-            - name: Check platform requirements
-              run: composer check-platform-reqs
-
-            - name: Audit resolved dependencies
-              run: composer audit --no-interaction
-
-            - name: Run PHPUnit
-              run: vendor/bin/phpunit --configuration ../phpunit.xml.dist
+                      shopware_version: "v6.7.12.1"
+        uses: shopware/github-actions/.github/workflows/phpunit.yml@7c398bdcf7f564f2885758094e11b3b6d8b9b699
+        with:
+            extensionName: LaioutrConnector
+            shopwareVersion: ${{ matrix.shopware_version }}
+            phpVersion: "8.4"
+            mysqlVersion: mariadb:11.8
+            filterName: LaioutrConnector

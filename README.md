@@ -88,7 +88,7 @@ Browser third-party-cookie policies can still prevent embedded sessions.
 
 ## Development
 
-A Shopware CLI-generated 6.6.10.20 project lives under `dev/` and mounts this repository into `custom/plugins/LaioutrConnector`.
+A Shopware CLI-generated 6.6.10.20 project lives under `dev/` for local development and mounts this repository into `custom/plugins/LaioutrConnector`. CI does not use this project's lock file; it provisions a clean Shopware installation for each supported release line with Shopware's reusable GitHub Actions workflow.
 
 ```bash
 cd dev
