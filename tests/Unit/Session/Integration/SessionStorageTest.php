@@ -53,4 +53,17 @@ class SessionStorageTest extends TestCase
         static::assertNull($this->sessionStorage->getLoginSuccessCallback());
         static::assertNull($this->sessionStorage->getLogoutSuccessCallback());
     }
+
+    public function testRegenerateChangesSessionIdKeepingData(): void
+    {
+        $this->session->start();
+        $this->session->set('keep', 'value');
+        $before = $this->session->getId();
+
+        $this->sessionStorage->regenerate();
+
+        static::assertNotSame('', $this->session->getId());
+        static::assertNotSame($before, $this->session->getId());
+        static::assertSame('value', $this->session->get('keep'));
+    }
 }

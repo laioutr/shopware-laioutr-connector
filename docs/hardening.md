@@ -4,9 +4,10 @@ The initial extraction preserves the integration flow where possible and makes p
 
 ## Session and callback protocol
 
-- Replace the context-token query contract with signed, expiring, single-use state bound to the browser session and intended callback.
+- **Implemented.** The context-token query contract is replaced with a signed, expiring (60s), single-use code exchange: `POST /store-api/laioutr/session-handoff` mints the code server-to-server, and `GET /laioutr/connect-session?code=…` redeems it once, bound to the issuing sales channel. See `docs/superpowers/specs/2026-07-16-session-handoff-hardening-design.md`.
+- **Implemented.** The context token is never placed in a browser URL; only the opaque single-use code travels via redirect. See `docs/superpowers/specs/2026-07-16-session-handoff-hardening-design.md`.
 - Define replay protection and CSRF/state validation for connect-session and cookie-bridge.
-- Resolve the manual callback-payload TODO without exposing the Shopware context token in callback URLs, browser history, referrers, reverse-proxy logs, or analytics.
+- **Resolved.** The callback payload exposes only the URL-encoded `from` route, never the Shopware context token.
 - Decide whether login/logout callback values should be consumed once and removed from the session.
 - Define behavior for callback URLs that already contain `from` or other connector-owned query keys.
 - Return stable protocol-level error responses instead of framework exception pages.

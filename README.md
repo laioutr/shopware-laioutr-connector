@@ -42,26 +42,56 @@ bin/console system:config:set \
 
 ## Session endpoints
 
+The Shopware context token is never placed in a browser URL. Connecting a session is a two-step exchange: laioutr's backend mints a short-lived, single-use code server-to-server, then redirects the browser to redeem it.
+
+### `POST /store-api/laioutr/session-handoff`
+
+Mints a handoff code. Called server-to-server by the laioutr backend, which holds the `sw-context-token`.
+
+Required headers:
+
+| Header | Meaning |
+| --- | --- |
+| `sw-access-key` | Sales-channel access key |
+| `sw-context-token` | Context token to hand off |
+
+JSON body:
+
+```json
+{
+  "login-success-callback": "https://<allowed-domain>/login",
+  "logout-success-callback": "https://<allowed-domain>/logout",
+  "redirect-route": "frontend.checkout.cart.page"
+}
+```
+
+`login-success-callback` and `logout-success-callback` are validated against the allowed callback domains configuration. Response:
+
+```json
+{ "code": "<opaque single-use code>" }
+```
+
+The code is valid for 60 seconds and can be redeemed once.
+
 ### `GET /laioutr/connect-session`
 
-Starts the connection and redirects to a local Shopware route.
+Redeems a handoff code and redirects to a local Shopware route.
 
 Required query parameters:
 
 | Parameter | Meaning |
 | --- | --- |
-| `sw-context-token` | Context token stored in the Shopware session |
-| `redirect-route` | Local Shopware route name, for example `frontend.account.login.page` |
-| `login-success-callback` | Allowed external URL used after login or on an authenticated account page |
-| `logout-success-callback` | Allowed external URL used after logout |
+| `code` | Single-use code returned by `POST /store-api/laioutr/session-handoff` |
 
 Example:
 
 ```text
-/laioutr/connect-session?sw-context-token=…&redirect-route=frontend.account.login.page&login-success-callback=https%3A%2F%2Flaioutr.example.com%2Flogin&logout-success-callback=https%3A%2F%2Flaioutr.example.com%2Flogout
+/laioutr/connect-session?code=…
 ```
 
-Callback redirects append the URL-encoded `from` route. The legacy connector also appended the Shopware context token. That callback payload field is intentionally left as a manual TODO pending security review.
+The plugin redeems the code, verifies it was issued for the requesting sales channel, installs the context into the storefront session, and regenerates the session id before redirecting to the stored route so the shopper lands there with their basket.
+
+Callback redirects append only the URL-encoded `from` route. The Shopware context token is never included in the callback payload.
 
 ### `GET /laioutr/cookie-bridge`
 

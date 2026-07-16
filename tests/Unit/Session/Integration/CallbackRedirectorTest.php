@@ -16,7 +16,7 @@ class CallbackRedirectorTest extends TestCase
 {
     public function testBuildsEncodedCallbackUrlWithoutDisclosingContextToken(): void
     {
-        $sessionStorage = $this->createMock(SessionStorage::class);
+        $sessionStorage = $this->createStub(SessionStorage::class);
         $redirector = new CallbackRedirector($sessionStorage);
 
         static::assertSame(
@@ -27,7 +27,7 @@ class CallbackRedirectorTest extends TestCase
 
     public function testPreservesExistingQueryAndFragment(): void
     {
-        $sessionStorage = $this->createMock(SessionStorage::class);
+        $sessionStorage = $this->createStub(SessionStorage::class);
         $redirector = new CallbackRedirector($sessionStorage);
 
         static::assertSame(
@@ -41,7 +41,7 @@ class CallbackRedirectorTest extends TestCase
 
     public function testAppliesScheduledCallbackToKernelResponse(): void
     {
-        $sessionStorage = $this->createMock(SessionStorage::class);
+        $sessionStorage = $this->createStub(SessionStorage::class);
         $sessionStorage
             ->method('getLoginSuccessCallback')
             ->willReturn('https://example.com/callback');
@@ -51,7 +51,7 @@ class CallbackRedirectorTest extends TestCase
         $redirector->scheduleLoginCallback($request, 'frontend.account.home.page');
 
         $event = new ResponseEvent(
-            $this->createMock(HttpKernelInterface::class),
+            $this->createStub(HttpKernelInterface::class),
             $request,
             HttpKernelInterface::MAIN_REQUEST,
             new Response('original'),
@@ -68,7 +68,7 @@ class CallbackRedirectorTest extends TestCase
 
     public function testDoesNotChangeResponseWithoutCallback(): void
     {
-        $sessionStorage = $this->createMock(SessionStorage::class);
+        $sessionStorage = $this->createStub(SessionStorage::class);
         $redirector = new CallbackRedirector($sessionStorage);
         $response = new Response('original');
         $request = new Request();
@@ -76,7 +76,7 @@ class CallbackRedirectorTest extends TestCase
         $redirector->scheduleLoginCallback($request, 'frontend.account.home.page');
 
         $event = new ResponseEvent(
-            $this->createMock(HttpKernelInterface::class),
+            $this->createStub(HttpKernelInterface::class),
             $request,
             HttpKernelInterface::MAIN_REQUEST,
             $response,

@@ -1,3 +1,7 @@
 laioutr_connector:
     resource: ../../Session/Storefront/Controller/*Controller.php
     type: attribute
+
+laioutr_connector_store_api:
+    resource: ../../Session/StoreApi/Controller/*Controller.php
+    type: attribute

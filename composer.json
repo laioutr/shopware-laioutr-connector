@@ -41,10 +41,7 @@
             "docker run --rm -v $(pwd):/ext shopware/shopware-cli:latest extension validate --full --check-against highest /ext"
         ],
         "format": "docker run --rm -v $(pwd):/ext shopware/shopware-cli:latest extension format /ext --dry-run",
-        "phpstan": [
-            "php ../../../src/Core/DevOps/StaticAnalyze/phpstan-bootstrap.php",
-            "../../../vendor/bin/phpstan analyze"
-        ],
+        "phpstan": "../../../vendor/bin/phpstan analyze -c phpstan.neon.dist --no-progress",
         "phpunit": "../../../vendor/bin/phpunit --configuration phpunit.xml.dist"
     },
     "extra": {

@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Laioutr\Connector\Tests\Integration;
 
 use Laioutr\Connector\Session\Business\DomainWhitelistValidator;
+use Laioutr\Connector\Session\Business\SessionHandoffCodeService;
+use Laioutr\Connector\Session\Integration\SessionHandoffStore;
 use PHPUnit\Framework\TestCase;
 use Shopware\Core\Framework\Test\TestCaseBase\IntegrationTestBehaviour;
+use Shopware\Core\Framework\Uuid\Uuid;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Shopware\Storefront\Test\Controller\StorefrontControllerTestBehaviour;
 use Symfony\Component\HttpFoundation\Response;
@@ -38,19 +41,66 @@ class ConnectorRouteTest extends TestCase
 
     public function testConnectSessionRedirectsToShopwareRoute(): void
     {
-        $response = $this->request(
-            'GET',
-            'laioutr/connect-session',
-            [
-                'sw-context-token' => 'test-context-token',
-                'redirect-route' => 'frontend.account.login.page',
-                'login-success-callback' => 'http://localhost/login-callback',
-                'logout-success-callback' => 'http://localhost/logout-callback',
-            ],
+        $code = static::getContainer()->get(SessionHandoffCodeService::class)->generateCode();
+        static::getContainer()->get(SessionHandoffStore::class)->issue(
+            $code,
+            'test-context-token',
+            $this->getSalesChannelId(),
+            'http://localhost/login-callback',
+            'http://localhost/logout-callback',
+            'frontend.account.login.page',
         );
+
+        $response = $this->request('GET', 'laioutr/connect-session', ['code' => $code]);
 
         static::assertSame(Response::HTTP_FOUND, $response->getStatusCode());
         static::assertSame('/account/login', $response->headers->get('Location'));
+        // Spec §13: the context token must never leak into the redirect target.
+        static::assertStringNotContainsString(
+            'test-context-token',
+            (string) $response->headers->get('Location'),
+        );
+    }
+
+    public function testConnectSessionRejectsUnknownCode(): void
+    {
+        $response = $this->request('GET', 'laioutr/connect-session', ['code' => 'does-not-exist']);
+
+        static::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+    }
+
+    public function testConnectSessionRejectsForeignSalesChannel(): void
+    {
+        $code = static::getContainer()->get(SessionHandoffCodeService::class)->generateCode();
+        static::getContainer()->get(SessionHandoffStore::class)->issue(
+            $code,
+            'test-context-token',
+            Uuid::randomHex(),
+            'http://localhost/login-callback',
+            'http://localhost/logout-callback',
+            'frontend.account.login.page',
+        );
+
+        $response = $this->request('GET', 'laioutr/connect-session', ['code' => $code]);
+
+        static::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+    }
+
+    public function testConnectSessionRejectsUnknownRedirectRoute(): void
+    {
+        $code = static::getContainer()->get(SessionHandoffCodeService::class)->generateCode();
+        static::getContainer()->get(SessionHandoffStore::class)->issue(
+            $code,
+            'test-context-token',
+            $this->getSalesChannelId(),
+            'http://localhost/login-callback',
+            'http://localhost/logout-callback',
+            'laioutr.not.a.registered.route',
+        );
+
+        $response = $this->request('GET', 'laioutr/connect-session', ['code' => $code]);
+
+        static::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
     }
 
     public function testResponseAllowsEmbedding(): void

@@ -8,6 +8,9 @@ services:
     Laioutr\Connector\Session\Storefront\Controller\CookieRedirectController:
         public: true
 
+    Laioutr\Connector\Session\StoreApi\Controller\SessionHandoffController:
+        public: true
+
     Laioutr\Connector\Session\Subscriber\AuthSubscriber:
         tags:
             - kernel.event_subscriber
@@ -19,3 +22,6 @@ services:
     Laioutr\Connector\Session\Integration\SessionStorage: ~
     Laioutr\Connector\Session\Integration\CallbackRedirector: ~
     Laioutr\Connector\Session\Business\DomainWhitelistValidator: ~
+    Laioutr\Connector\Session\Business\SessionHandoffCodeService: ~
+
+    Laioutr\Connector\Session\Integration\SessionHandoffStore: ~

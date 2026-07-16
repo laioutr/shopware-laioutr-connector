@@ -30,5 +30,9 @@ class PluginWiringTest extends TestCase
             '/laioutr/cookie-bridge',
             $routeCollection->get('frontend.laioutr.cookie-bridge')?->getPath(),
         );
+        static::assertSame(
+            '/store-api/laioutr/session-handoff',
+            $routeCollection->get('store-api.laioutr.session-handoff')?->getPath(),
+        );
     }
 }

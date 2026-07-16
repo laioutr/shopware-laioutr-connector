@@ -47,6 +47,11 @@ class SessionStorage
         $this->set(PlatformRequest::HEADER_CONTEXT_TOKEN, $contextToken);
     }
 
+    public function regenerate(): void
+    {
+        $this->getSession()->migrate(true);
+    }
+
     private function get(string $name): ?string
     {
         $value = $this->getSession()->get($name);

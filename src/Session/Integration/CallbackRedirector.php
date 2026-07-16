@@ -55,7 +55,6 @@ class CallbackRedirector
             $separator = '';
         }
 
-        // TODO: Finalize the callback payload contract after security review.
         return $callbackUrl . $separator . http_build_query(
             ['from' => $from],
             '',
