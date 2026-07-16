@@ -63,6 +63,13 @@ jobs:
                   --reporter github
                   .
 
+    phpstan:
+        name: PHPStan
+        uses: shopware/github-actions/.github/workflows/phpstan.yml@7c398bdcf7f564f2885758094e11b3b6d8b9b699
+        with:
+            extensionName: LaioutrConnector
+            shopwareVersion: "v6.7.12.1"
+
     phpunit:
         name: PHPUnit (Shopware ${{ matrix.shopware }}, PHP 8.4)
         strategy:

@@ -31,6 +31,22 @@
             "Laioutr\\Connector\\Tests\\": "tests/"
         }
     },
+    "scripts": {
+        "check": [
+            "@format",
+            "@compatibility"
+        ],
+        "compatibility": [
+            "docker run --rm -v $(pwd):/ext shopware/shopware-cli:latest extension validate --full --check-against lowest /ext",
+            "docker run --rm -v $(pwd):/ext shopware/shopware-cli:latest extension validate --full --check-against highest /ext"
+        ],
+        "format": "docker run --rm -v $(pwd):/ext shopware/shopware-cli:latest extension format /ext --dry-run",
+        "phpstan": [
+            "php ../../../src/Core/DevOps/StaticAnalyze/phpstan-bootstrap.php",
+            "../../../vendor/bin/phpstan analyze"
+        ],
+        "phpunit": "../../../vendor/bin/phpunit --configuration phpunit.xml.dist"
+    },
     "extra": {
         "shopware-plugin-class": "Laioutr\\Connector\\LaioutrConnector",
         "plugin-icon": "src/Resources/public/plugin.png",

@@ -88,24 +88,33 @@ Browser third-party-cookie policies can still prevent embedded sessions.
 
 ## Development
 
-A Shopware CLI-generated 6.6.10.20 project lives under `dev/` for local development and mounts this repository into `custom/plugins/LaioutrConnector`. CI does not use this project's lock file; it provisions a clean Shopware installation for each supported release line with Shopware's reusable GitHub Actions workflow.
+Use a separate Shopware project for local development. Create one with Shopware CLI or use an existing installation, then link this repository into its plugin directory:
 
 ```bash
-cd dev
-cp .env .env.local
-# Set APP_SECRET and INSTANCE_ID in .env.local before first use.
+shopware-cli project create shopware-dev 6.6.10.20 --docker
+ln -s "$(pwd)" shopware-dev/custom/plugins/LaioutrConnector
+cd shopware-dev
 docker compose up -d
-docker compose exec web bin/console system:is-installed
 docker compose exec web bin/console plugin:refresh
 docker compose exec web bin/console plugin:install --activate LaioutrConnector
 ```
 
-Run tests:
+Run tests and static analysis from that Shopware installation:
 
 ```bash
-docker compose exec web ./vendor/bin/phpunit \
-    --configuration custom/plugins/LaioutrConnector/phpunit.xml.dist
+docker compose exec web composer \
+    --working-dir custom/plugins/LaioutrConnector phpunit
+docker compose exec web composer \
+    --working-dir custom/plugins/LaioutrConnector phpstan
 ```
+
+Run formatting and compatibility checks from the plugin repository (Docker required):
+
+```bash
+composer check
+```
+
+CI independently provisions clean Shopware installations for every supported release line with Shopware's reusable GitHub Actions workflow.
 
 No Administration or Storefront asset build is required because the plugin currently has no JavaScript, Twig, SCSS, or asset entrypoint.
 

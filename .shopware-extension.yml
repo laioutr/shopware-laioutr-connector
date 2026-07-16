@@ -19,7 +19,7 @@ build:
                     - .release-please-manifest.json
                     - release-please-config.json
                     - CHANGELOG.md
-                    - dev
                     - tests
                     - docs
+                    - phpstan.neon.dist
                     - phpunit.xml.dist
