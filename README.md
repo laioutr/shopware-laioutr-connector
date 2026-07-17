@@ -40,6 +40,33 @@ bin/console system:config:set \
     LaioutrConnector.config.callbackDomainWildcard localhost
 ```
 
+## Embedded storefront mode
+
+When **embedded mode** is enabled — the default, so it is an opt-out — the storefront acts as the embedded commerce backend for a Laioutr-rendered frontend:
+
+- **Lockdown** — every storefront route except the cart, checkout, account, and plugin session flows redirects to the cart. Add exceptions (for example a payment plugin's return route) under **Additional allowed routes**, one route name per line.
+- **Hidden chrome** — the storefront header, navigation, and footer are not rendered; Laioutr provides them.
+- **Bridge** — a small static script (`Resources/public/laioutr-embed.js`) is loaded and talks to the Laioutr parent frame over `postMessage`.
+
+Embedded mode is a per-sales-channel setting. **Installing _or updating_ the plugin locks the storefront down immediately on every channel where the setting is on** — the default also applies to an existing install the first time it updates onto this version. Disable it on any channel that should keep the full storefront. Run `bin/console assets:install` after installing or updating the plugin so `laioutr-embed.js` is published to `public/bundles/laioutrconnector/`. To browse the raw storefront during development, turn it off:
+
+```bash
+bin/console system:config:set LaioutrConnector.config.embeddedModeEnabled false
+```
+
+### Bridge message contract
+
+Every message uses the envelope `{ source: 'laioutr-shopware', version: 1, type, payload }`. On load the bridge posts `laioutr:ready` to `*`, then buffers data-bearing messages until the parent replies with `laioutr:init`; that reply's `event.origin` — validated against the allowed callback domains — becomes the pinned target for every later message.
+
+| Direction | `type` | `payload` |
+| --- | --- | --- |
+| shop → parent | `laioutr:ready` | `{}` |
+| shop → parent | `laioutr:resize` | `{ height }` |
+| shop → parent | `laioutr:page-loaded` | `{ path, route, navigationId, salesChannelId }` |
+| shop → parent | `laioutr:checkout-finish` | `{ orderId }` |
+| shop → parent | `laioutr:pw-recovery` | `{}` |
+| parent → shop | `laioutr:init` | `{}` (its origin becomes the pinned target) |
+
 ## Session endpoints
 
 The Shopware context token is never placed in a browser URL. Connecting a session is a two-step exchange: laioutr's backend mints a short-lived, single-use code server-to-server, then redirects the browser to redeem it.
@@ -103,7 +130,7 @@ Redirects to an allowed external URL so the browser can establish the Shopware s
 
 ## Embedded storefront prerequisite
 
-The plugin removes `X-Frame-Options` globally because embedding Shopware is required for the integration to function. Deployments must restrict embedding with an appropriate Content Security Policy such as `frame-ancestors` at the application or reverse-proxy layer.
+The plugin removes `X-Frame-Options` globally because embedding Shopware is required for the integration to function. Deployments must restrict embedding with an appropriate Content Security Policy such as `frame-ancestors` at the application or reverse-proxy layer. With embedded mode enabled, the plugin also stops rendering the storefront header and footer; the `frame-ancestors` policy remains the boundary that controls which origins may embed the shop.
 
 Cross-site sessions also generally require HTTPS, secure cookies, and:
 
@@ -146,7 +173,7 @@ composer check
 
 CI independently provisions clean Shopware installations for every supported release line with Shopware's reusable GitHub Actions workflow.
 
-No Administration or Storefront asset build is required because the plugin currently has no JavaScript, Twig, SCSS, or asset entrypoint.
+No Administration or Storefront **build** is required: the plugin ships Twig template overrides and one static JavaScript asset (`src/Resources/public/laioutr-embed.js`, served via `asset()`), with no webpack, Vite, or SCSS entrypoint — run `bin/console assets:install` to publish the asset. The embedded-mode Twig overrides and bridge are verified against a running dev shop with a theme assigned; Shopware's PHPUnit harness installs without a theme, so plugin storefront template overrides do not resolve under it and are not asserted there.
 
 ## Releases
 

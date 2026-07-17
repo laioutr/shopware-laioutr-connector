@@ -1,0 +1,28 @@
+{% sw_extends '@Storefront/storefront/base.html.twig' %}
+
+{# Laioutr embedded mode: hide storefront chrome and load the parent-frame bridge. #}
+{% set laioutrEmbedded = config('LaioutrConnector.config.embeddedModeEnabled') %}
+
+{# Full-page chrome. Both 6.6 (base_header/base_footer/base_navigation) and 6.7
+   (base_esi_header/base_esi_footer) block names are overridden; a block that does
+   not exist in a given version is a harmless no-op under sw_extends. #}
+{% block base_header %}{% if not laioutrEmbedded %}{{ parent() }}{% endif %}{% endblock %}
+{% block base_esi_header %}{% if not laioutrEmbedded %}{{ parent() }}{% endif %}{% endblock %}
+{% block base_navigation %}{% if not laioutrEmbedded %}{{ parent() }}{% endif %}{% endblock %}
+{% block base_offcanvas_navigation %}{% if not laioutrEmbedded %}{{ parent() }}{% endif %}{% endblock %}
+{% block base_esi_footer %}{% if not laioutrEmbedded %}{{ parent() }}{% endif %}{% endblock %}
+{% block base_footer %}{% if not laioutrEmbedded %}{{ parent() }}{% endif %}{% endblock %}
+{% block base_scroll_up %}{% if not laioutrEmbedded %}{{ parent() }}{% endif %}{% endblock %}
+
+{% block base_body_script %}
+    {{ parent() }}
+    {% if laioutrEmbedded %}
+        <script defer
+                src="{{ asset('bundles/laioutrconnector/laioutr-embed.js') }}"
+                data-laioutr-embed
+                data-route="{{ activeRoute }}"
+                data-navigation-id="{{ shopware.navigation.id }}"
+                data-sales-channel-id="{{ context.salesChannelId }}"
+                data-allowed-origins="{{ config('LaioutrConnector.config.callbackDomainWildcard') }}"></script>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,8 @@
+{% sw_extends '@Storefront/storefront/page/checkout/finish/index.html.twig' %}
+
+{% block page_checkout_finish %}
+    {{ parent() }}
+    {% if config('LaioutrConnector.config.embeddedModeEnabled') %}
+        <div data-laioutr-order-id="{{ page.order.id }}" hidden></div>
+    {% endif %}
+{% endblock %}

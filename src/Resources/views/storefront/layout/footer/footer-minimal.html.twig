@@ -1,0 +1,9 @@
+{% sw_extends '@Storefront/storefront/layout/footer/footer-minimal.html.twig' %}
+
+{% block layout_footer_inner_container %}
+    {% if not config('LaioutrConnector.config.embeddedModeEnabled') %}{{ parent() }}{% endif %}
+{% endblock %}
+
+{% block layout_footer_service_menu %}
+    {% if not config('LaioutrConnector.config.embeddedModeEnabled') %}{{ parent() }}{% endif %}
+{% endblock %}

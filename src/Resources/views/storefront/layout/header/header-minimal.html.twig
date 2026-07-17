@@ -1,0 +1,5 @@
+{% sw_extends '@Storefront/storefront/layout/header/header-minimal.html.twig' %}
+
+{% block layout_header %}
+    {% if not config('LaioutrConnector.config.embeddedModeEnabled') %}{{ parent() }}{% endif %}
+{% endblock %}

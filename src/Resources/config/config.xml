@@ -9,8 +9,30 @@
             <name>callbackDomainWildcard</name>
             <label>Allowed callback domains</label>
             <label lang="de-DE">Erlaubte Callback-Domains</label>
-            <helpText>One domain per line. Wildcards are allowed. Empty configuration rejects all callbacks.</helpText>
-            <helpText lang="de-DE">Eine Domain pro Zeile. Platzhalter sind erlaubt. Eine leere Konfiguration weist alle Callbacks zurück.</helpText>
+            <helpText>One domain per line. Wildcards are allowed. Empty configuration rejects all callbacks. These domains also authorize the embedded storefront's parent frame; if this list is empty, the embedded bridge instead trusts the framing origin and relies on your frame-ancestors CSP.</helpText>
+            <helpText lang="de-DE">Eine Domain pro Zeile. Platzhalter sind erlaubt. Eine leere Konfiguration weist alle Callbacks zurück. Diese Domains autorisieren außerdem den übergeordneten Rahmen des eingebetteten Storefronts; ist die Liste leer, vertraut die eingebettete Bridge stattdessen dem einbettenden Ursprung und verlässt sich auf Ihre frame-ancestors-CSP.</helpText>
+        </input-field>
+    </card>
+
+    <card>
+        <title>Embedded storefront</title>
+        <title lang="de-DE">Eingebetteter Storefront</title>
+
+        <input-field type="bool">
+            <name>embeddedModeEnabled</name>
+            <label>Enable embedded mode (lockdown, hidden header/footer, Laioutr bridge)</label>
+            <label lang="de-DE">Eingebetteten Modus aktivieren (Lockdown, ausgeblendete Kopf-/Fußzeile, Laioutr-Bridge)</label>
+            <helpText>When enabled, only the cart, checkout, and account flows stay reachable — every other storefront route redirects to the cart. Header and footer are hidden and the Laioutr iframe bridge is loaded. Enabled by default; disable to opt out.</helpText>
+            <helpText lang="de-DE">Wenn aktiviert, bleiben nur Warenkorb-, Checkout- und Konto-Abläufe erreichbar — jede andere Storefront-Route wird zum Warenkorb umgeleitet. Kopf- und Fußzeile werden ausgeblendet und die Laioutr-Iframe-Bridge wird geladen. Standardmäßig aktiviert; zum Deaktivieren abwählen.</helpText>
+            <defaultValue>true</defaultValue>
+        </input-field>
+
+        <input-field type="textarea">
+            <name>lockdownAdditionalAllowedRoutes</name>
+            <label>Additional allowed routes</label>
+            <label lang="de-DE">Zusätzlich erlaubte Routen</label>
+            <helpText>One storefront route name per line to keep reachable under lockdown, for example a payment plugin's return route (e.g. frontend.example.return).</helpText>
+            <helpText lang="de-DE">Eine Storefront-Routenname pro Zeile, die unter Lockdown erreichbar bleiben soll, z. B. die Rückgabe-Route eines Payment-Plugins (etwa frontend.example.return).</helpText>
         </input-field>
     </card>
 </config>
