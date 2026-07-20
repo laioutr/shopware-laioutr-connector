@@ -14,6 +14,11 @@
 {% block base_footer %}{% if not laioutrEmbedded %}{{ parent() }}{% endif %}{% endblock %}
 {% block base_scroll_up %}{% if not laioutrEmbedded %}{{ parent() }}{% endif %}{% endblock %}
 
+{# Cookie consent bar is storefront chrome too — Laioutr owns consent in the frame.
+   Rendered inline in 6.6/6.7 and via sw_block() at the body top in 6.8; overriding
+   the block once suppresses it in both. #}
+{% block base_cookie_permission %}{% if not laioutrEmbedded %}{{ parent() }}{% endif %}{% endblock %}
+
 {% block base_body_script %}
     {{ parent() }}
     {% if laioutrEmbedded %}

@@ -37,10 +37,11 @@ class RouteAllowlistTest extends TestCase
         yield 'plugin session route allowed' => ['', 'frontend.laioutr.connect-session', true];
         yield 'plugin cookie bridge allowed' => ['', 'frontend.laioutr.cookie-bridge', true];
         yield 'error page allowed' => ['', 'error', true];
-        yield 'csrf token allowed' => ['', 'frontend.csrf.generateToken', true];
         yield 'cart offcanvas allowed' => ['', 'frontend.cart.offcanvas', true];
         yield 'cookie offcanvas allowed' => ['', 'frontend.cookie.offcanvas', true];
-        yield 'maintenance page allowed' => ['', 'frontend.maintenance.singlePage', true];
+        yield 'maintenance page allowed' => ['', 'frontend.maintenance.page', true];
+        yield 'maintenance single page allowed' => ['', 'frontend.maintenance.singlepage', true];
+        yield 'wrong-case maintenance denied' => ['', 'frontend.maintenance.singlePage', false];
         yield 'home denied' => ['', 'frontend.home.page', false];
         yield 'navigation denied' => ['', 'frontend.navigation.page', false];
         yield 'product detail denied' => ['', 'frontend.detail.page', false];

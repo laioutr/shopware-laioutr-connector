@@ -45,14 +45,16 @@ bin/console system:config:set \
 When **embedded mode** is enabled — the default, so it is an opt-out — the storefront acts as the embedded commerce backend for a Laioutr-rendered frontend:
 
 - **Lockdown** — every storefront route except the cart, checkout, account, and plugin session flows redirects to the cart. Add exceptions (for example a payment plugin's return route) under **Additional allowed routes**, one route name per line.
-- **Hidden chrome** — the storefront header, navigation, and footer are not rendered; Laioutr provides them.
+- **Hidden chrome** — the storefront header, navigation, footer, and the built-in cookie-consent bar are not rendered; Laioutr provides them and owns consent in the frame.
 - **Bridge** — a small static script (`Resources/public/laioutr-embed.js`) is loaded and talks to the Laioutr parent frame over `postMessage`.
 
 Embedded mode is a per-sales-channel setting. **Installing _or updating_ the plugin locks the storefront down immediately on every channel where the setting is on** — the default also applies to an existing install the first time it updates onto this version. Disable it on any channel that should keep the full storefront. Run `bin/console assets:install` after installing or updating the plugin so `laioutr-embed.js` is published to `public/bundles/laioutrconnector/`. To browse the raw storefront during development, turn it off:
 
 ```bash
-bin/console system:config:set LaioutrConnector.config.embeddedModeEnabled false
+bin/console system:config:set -j LaioutrConnector.config.embeddedModeEnabled false
 ```
+
+The `-j` flag stores a real JSON boolean. Without it the CLI stores the string `"false"`, which `getBool()` and the Twig `config()` function both read as truthy — leaving embedded mode enabled. The Administration toggle stores booleans correctly, so this only matters when setting the flag from the CLI.
 
 ### Bridge message contract
 
@@ -145,24 +147,54 @@ Browser third-party-cookie policies can still prevent embedded sessions.
 
 ## Development
 
-Use a separate Shopware project for local development. Create one with Shopware CLI or use an existing installation, then link this repository into its plugin directory:
+Use a separate Shopware project for local development. From this repository, create one with Shopware CLI and clone Shopware's demo-data plugin into it:
 
 ```bash
-shopware-cli project create shopware-dev 6.6.10.20 --docker
-ln -s "$(pwd)" shopware-dev/custom/plugins/LaioutrConnector
-cd shopware-dev
-docker compose up -d
-docker compose exec web bin/console plugin:refresh
-docker compose exec web bin/console plugin:install --activate LaioutrConnector
+shopware-cli project create shopware-dev 6.7.12.1 --docker
+git clone https://github.com/shopware/SwagPlatformDemoData.git \
+    shopware-dev/custom/plugins/SwagPlatformDemoData
 ```
 
-Run tests and static analysis from that Shopware installation:
+Mount this repository into the project with a Compose override. A bind mount is required because the Docker environment only mounts the `shopware-dev/` project directory, so a symlink to this repository would not resolve inside the container:
+
+```bash
+cat > shopware-dev/compose.override.yaml <<'YAML'
+services:
+    web:
+        volumes:
+            - ..:/var/www/html/custom/plugins/LaioutrConnector
+YAML
+```
+
+Then start the environment:
+
+```bash
+cd shopware-dev
+shopware-cli project dev
+```
+
+The first `project dev` run installs Shopware. In another terminal, refresh the extension list and activate both plugins:
+
+```bash
+cd shopware-dev
+shopware-cli project console plugin:refresh
+shopware-cli project console plugin:install --activate LaioutrConnector
+shopware-cli project console plugin:install --activate SwagPlatformDemoData
+```
+
+The demo-data plugin imports sample data during activation and may overwrite existing data. Use it only in development. The storefront is available at <http://127.0.0.1:8000> and the Administration at <http://127.0.0.1:8000/admin> (`admin` / `shopware`).
+
+The generated project ships without test tooling. Install Shopware's dev tools once so PHPUnit is available at the Shopware root:
+
+```bash
+docker compose exec web composer require --dev shopware/dev-tools
+```
+
+Then run the plugin's test suite from that Shopware installation:
 
 ```bash
 docker compose exec web composer \
     --working-dir custom/plugins/LaioutrConnector phpunit
-docker compose exec web composer \
-    --working-dir custom/plugins/LaioutrConnector phpstan
 ```
 
 Run formatting and compatibility checks from the plugin repository (Docker required):
@@ -170,6 +202,8 @@ Run formatting and compatibility checks from the plugin repository (Docker requi
 ```bash
 composer check
 ```
+
+Static analysis (`composer phpstan`) resolves against the Shopware root and runs in CI through Shopware's reusable PHPStan workflow.
 
 CI independently provisions clean Shopware installations for every supported release line with Shopware's reusable GitHub Actions workflow.
 
@@ -189,7 +223,7 @@ Release Please pull requests created with the repository `GITHUB_TOKEN` do not a
 
 ### Packagist
 
-The canonical GitHub repository must be public before the package can be submitted to public Packagist. Submit `https://github.com/laioutr/shopware-laioutr-connector` once and authorize the Packagist GitHub integration. Packagist then indexes release tags automatically; no Packagist token or ZIP upload is needed in GitHub Actions.
+The package is published on public Packagist as [`laioutr/shopware-connector`](https://packagist.org/packages/laioutr/shopware-connector), fed by the public GitHub repository through the Packagist GitHub integration. Packagist indexes new release tags automatically; no Packagist token or ZIP upload is needed in GitHub Actions.
 
 ### Shopware Store
 

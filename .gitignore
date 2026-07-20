@@ -4,3 +4,4 @@
 /.phpunit.result.cache/
 /*.zip
 /dist/
+/shopware-dev/

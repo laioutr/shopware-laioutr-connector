@@ -27,17 +27,17 @@ class RouteAllowlist
     ];
 
     /**
-     * Exact route names that stay reachable: error/maintenance pages and the
-     * CSRF/cookie endpoints the allowed flows depend on.
+     * Exact route names that stay reachable: the error and maintenance pages
+     * and the cookie-settings offcanvas the allowed flows depend on. Route
+     * names are case-sensitive and must match Shopware's exactly.
      *
      * @var list<string>
      */
     private const ALLOWED_ROUTES = [
         'error',
-        'frontend.csrf.generateToken',
         'frontend.cookie.offcanvas',
-        'frontend.cookie.configuration',
-        'frontend.maintenance.singlePage',
+        'frontend.maintenance.page',
+        'frontend.maintenance.singlepage',
     ];
 
     public function __construct(
