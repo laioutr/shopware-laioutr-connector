@@ -24,6 +24,10 @@ services:
 
     Laioutr\Connector\Session\Integration\SessionStorage: ~
     Laioutr\Connector\Session\Integration\CallbackRedirector: ~
+
+    Laioutr\Connector\Session\Integration\AuthBridgeNotifier:
+        tags:
+            - kernel.event_subscriber
     Laioutr\Connector\Session\Business\DomainWhitelistValidator: ~
     Laioutr\Connector\Session\Business\SessionHandoffCodeService: ~
 

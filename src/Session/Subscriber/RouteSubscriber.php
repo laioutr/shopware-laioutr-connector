@@ -6,6 +6,7 @@ namespace Laioutr\Connector\Session\Subscriber;
 
 use Laioutr\Connector\Session\Integration\CallbackRedirector;
 use Shopware\Core\PlatformRequest;
+use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Shopware\Storefront\Page\GenericPageLoadedEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
@@ -31,8 +32,11 @@ class RouteSubscriber implements EventSubscriberInterface
         'frontend.account.payment.save',
     ];
 
+    private const EMBEDDED_MODE_CONFIG_KEY = 'LaioutrConnector.config.embeddedModeEnabled';
+
     public function __construct(
         private readonly CallbackRedirector $callbackRedirector,
+        private readonly SystemConfigService $systemConfigService,
     ) {
     }
 
@@ -51,13 +55,20 @@ class RouteSubscriber implements EventSubscriberInterface
     {
         $request = $event->getRequest();
         $route = $request->attributes->get('_route');
+        $context = $event->getSalesChannelContext();
 
         if (
-            $event->getSalesChannelContext()->getCustomer() === null
+            $context->getCustomer() === null
             || $request->isXmlHttpRequest()
             || !\is_string($route)
             || !\in_array($route, self::LOGGED_IN_REDIRECT_ROUTES, true)
         ) {
+            return;
+        }
+
+        // Embedded mode: account/order pages render inside the frame; the bridge (not a 302
+        // to the laioutr origin) carries auth changes, so never schedule the external callback.
+        if ($this->systemConfigService->getBool(self::EMBEDDED_MODE_CONFIG_KEY, $context->getSalesChannelId())) {
             return;
         }
 
