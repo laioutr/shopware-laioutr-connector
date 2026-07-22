@@ -67,7 +67,10 @@ Every message uses the envelope `{ source: 'laioutr-shopware', version: 1, type,
 | shop → parent | `laioutr:page-loaded` | `{ path, route, navigationId, salesChannelId }` |
 | shop → parent | `laioutr:checkout-finish` | `{ orderId }` |
 | shop → parent | `laioutr:pw-recovery` | `{}` |
+| shop → parent | `laioutr:auth-changed` | `{ from, code? }` |
 | parent → shop | `laioutr:init` | `{}` (its origin becomes the pinned target) |
+
+`laioutr:auth-changed` fires in embedded mode after a storefront login (`from` = the login route, `code` present) or logout (`from` = the logout route, no `code`). `code` is a single-use handoff code the parent redeems server-to-server at `POST /store-api/laioutr/session-adopt` for the customer-bound context token; the token never enters the browser.
 
 ## Session endpoints
 
@@ -101,6 +104,30 @@ JSON body:
 ```
 
 The code is valid for 60 seconds and can be redeemed once.
+
+### `POST /store-api/laioutr/session-adopt`
+
+Redeems a handoff code for its context token. Called server-to-server by the laioutr backend after it receives a `laioutr:auth-changed` message with a `code`.
+
+Required headers:
+
+| Header | Meaning |
+| --- | --- |
+| `sw-access-key` | Sales-channel access key |
+
+JSON body:
+
+```json
+{ "code": "<single-use code>" }
+```
+
+Response:
+
+```json
+{ "context-token": "<customer-bound context token>" }
+```
+
+The code is single-use, expires in 60 seconds, and must have been issued for the requesting sales channel. Invalid, expired, already-redeemed, or wrong-sales-channel codes return `400`.
 
 ### `GET /laioutr/connect-session`
 
