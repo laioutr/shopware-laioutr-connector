@@ -230,7 +230,7 @@ Run formatting and compatibility checks from the plugin repository (Docker requi
 composer check
 ```
 
-Static analysis (`composer phpstan`) resolves against the Shopware root and runs in CI through Shopware's reusable PHPStan workflow.
+Static analysis (`composer phpstan`) runs at level 9 over `src`. `phpstan-bootstrap.php` walks upwards until it finds a Composer autoloader that provides Shopware, so the same `phpstan.neon.dist` works from a Shopware project, from a Shopware monorepo checkout (Shopware's reusable PHPStan workflow), and standalone with the plugin's own vendor directory (`shopware-cli extension validate --full`).
 
 CI independently provisions clean Shopware installations for every supported release line with Shopware's reusable GitHub Actions workflow.
 

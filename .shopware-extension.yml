@@ -22,4 +22,5 @@ build:
                     - tests
                     - docs
                     - phpstan.neon.dist
+                    - phpstan-bootstrap.php
                     - phpunit.xml.dist

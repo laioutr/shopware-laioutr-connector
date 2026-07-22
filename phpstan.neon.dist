@@ -1,11 +1,8 @@
-includes:
-    - ../../../vendor/shopware/core/DevOps/StaticAnalyze/PHPStan/extension.neon
-
 parameters:
     level: 9
 
     bootstrapFiles:
-        - ../../../vendor/shopware/core/DevOps/StaticAnalyze/phpstan-bootstrap.php
+        - phpstan-bootstrap.php
 
     paths:
         - src

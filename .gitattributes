@@ -4,6 +4,7 @@
 /phpunit.xml.dist export-ignore
 /.php-cs-fixer.dist.php export-ignore
 /phpstan.neon.dist export-ignore
+/phpstan-bootstrap.php export-ignore
 /.phpunit.cache export-ignore
 /.gitignore export-ignore
 /.gitattributes export-ignore
