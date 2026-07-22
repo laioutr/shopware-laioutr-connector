@@ -11,6 +11,9 @@ services:
     Laioutr\Connector\Session\StoreApi\Controller\SessionHandoffController:
         public: true
 
+    Laioutr\Connector\Session\StoreApi\Controller\SessionAdoptController:
+        public: true
+
     Laioutr\Connector\Session\Subscriber\AuthSubscriber:
         tags:
             - kernel.event_subscriber
