@@ -22,7 +22,7 @@ class SessionAdoptControllerApiTest extends TestCase
         $browser = $this->getSalesChannelBrowser();
         $code = $this->issueCodeFor($this->salesChannelIdOf($browser), 'ctx-token-integration');
 
-        $browser->request('POST', '/store-api/laioutr/session-adopt', ['code' => $code]);
+        $this->adopt($browser, $code);
 
         $response = $browser->getResponse();
         static::assertSame(Response::HTTP_OK, $response->getStatusCode());
@@ -37,8 +37,8 @@ class SessionAdoptControllerApiTest extends TestCase
         $browser = $this->getSalesChannelBrowser();
         $code = $this->issueCodeFor($this->salesChannelIdOf($browser), 'ctx-token-integration');
 
-        $browser->request('POST', '/store-api/laioutr/session-adopt', ['code' => $code]);
-        $browser->request('POST', '/store-api/laioutr/session-adopt', ['code' => $code]);
+        $this->adopt($browser, $code);
+        $this->adopt($browser, $code);
 
         static::assertSame(Response::HTTP_BAD_REQUEST, $browser->getResponse()->getStatusCode());
     }
@@ -49,9 +49,25 @@ class SessionAdoptControllerApiTest extends TestCase
         // Issue for a sales channel other than the one the browser authenticates against.
         $code = $this->issueCodeFor('0123456789abcdef0123456789abcdef', 'ctx-token-integration');
 
-        $browser->request('POST', '/store-api/laioutr/session-adopt', ['code' => $code]);
+        $this->adopt($browser, $code);
 
         static::assertSame(Response::HTTP_BAD_REQUEST, $browser->getResponse()->getStatusCode());
+    }
+
+    /**
+     * Posts the JSON body the laioutr backend actually sends (Content-Type: application/json),
+     * exercising Shopware's store-api JSON decoding into the request bag.
+     */
+    private function adopt(AbstractBrowser $browser, string $code): void
+    {
+        $browser->request(
+            'POST',
+            '/store-api/laioutr/session-adopt',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode(['code' => $code], \JSON_THROW_ON_ERROR),
+        );
     }
 
     private function issueCodeFor(string $salesChannelId, string $contextToken): string
