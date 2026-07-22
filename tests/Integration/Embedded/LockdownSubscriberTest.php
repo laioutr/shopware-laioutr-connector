@@ -45,6 +45,21 @@ class LockdownSubscriberTest extends TestCase
         static::assertSame('http://localhost/callback', $response->headers->get('Location'));
     }
 
+    public function testWidgetPathPassesThroughWhenEmbedded(): void
+    {
+        $this->setConfig(LockdownSubscriber::CONFIG_KEY_EMBEDDED_MODE, true);
+
+        $response = $this->request('GET', 'widgets/menu/offcanvas', []);
+
+        // A /widgets/* AJAX fragment is allowed by path even though its route name
+        // (frontend.menu.offcanvas) is not in the name allowlist. Render-independent:
+        // whatever the widget returns, lockdown must not redirect it to the cart.
+        static::assertFalse(
+            $response->isRedirect('/checkout/cart'),
+            'Lockdown must not redirect a /widgets/* route to the cart',
+        );
+    }
+
     public function testDisallowedRouteIsNotRedirectedWhenDisabled(): void
     {
         $this->setConfig(LockdownSubscriber::CONFIG_KEY_EMBEDDED_MODE, false);

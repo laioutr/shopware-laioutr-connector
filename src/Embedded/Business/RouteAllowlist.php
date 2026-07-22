@@ -11,9 +11,20 @@ class RouteAllowlist
     public const CONFIG_KEY_ADDITIONAL_ROUTES = 'LaioutrConnector.config.lockdownAdditionalAllowedRoutes';
 
     /**
-     * Route-name prefixes that stay reachable under lockdown: the cart,
-     * checkout, account, and the plugin's own session routes, plus the widgets
-     * those flows load over AJAX.
+     * Request-path prefixes that stay reachable under lockdown regardless of route name.
+     * Most storefront AJAX fragments live under `/widgets/*` but with inconsistent route names
+     * (`frontend.cms.*`, `frontend.menu.offcanvas`, `widgets.*`, …), so they are matched by path.
+     *
+     * @var list<string>
+     */
+    private const ALLOWED_PATH_PREFIXES = [
+        '/widgets/',
+    ];
+
+    /**
+     * Route-name prefixes that stay reachable under lockdown: the cart, checkout, account, and
+     * the plugin's own session routes, plus `widgets.*` AJAX fragments whose path is not under
+     * `/widgets/` (e.g. `widgets.quickview.minimal` at `/quickview/{productId}`).
      *
      * @var list<string>
      */
@@ -22,8 +33,7 @@ class RouteAllowlist
         'frontend.account.',
         'frontend.cart.',
         'frontend.laioutr.',
-        'widgets.account.',
-        'widgets.checkout.',
+        'widgets.',
     ];
 
     /**
@@ -45,8 +55,14 @@ class RouteAllowlist
     ) {
     }
 
-    public function isAllowed(string $route, ?string $salesChannelId = null): bool
+    public function isAllowed(string $route, string $path, ?string $salesChannelId = null): bool
     {
+        foreach (self::ALLOWED_PATH_PREFIXES as $prefix) {
+            if (str_starts_with($path, $prefix)) {
+                return true;
+            }
+        }
+
         foreach (self::ALLOWED_PREFIXES as $prefix) {
             if (str_starts_with($route, $prefix)) {
                 return true;

@@ -44,7 +44,7 @@ bin/console system:config:set \
 
 When **embedded mode** is enabled — the default, so it is an opt-out — the storefront acts as the embedded commerce backend for a Laioutr-rendered frontend:
 
-- **Lockdown** — every storefront route except the cart, checkout, account, and plugin session flows redirects to the cart. Add exceptions (for example a payment plugin's return route) under **Additional allowed routes**, one route name per line.
+- **Lockdown** — every storefront route except the cart, checkout, account, plugin session flows, and storefront widget/AJAX fragments (`/widgets/*` paths and `widgets.*` routes such as product quick view) redirects to the cart. Add exceptions (for example a payment plugin's return route) under **Additional allowed routes**, one route name per line.
 - **Hidden chrome** — the storefront header, navigation, footer, and the built-in cookie-consent bar are not rendered; Laioutr provides them and owns consent in the frame.
 - **Bridge** — a small static script (`Resources/public/laioutr-embed.js`) is loaded and talks to the Laioutr parent frame over `postMessage`.
 

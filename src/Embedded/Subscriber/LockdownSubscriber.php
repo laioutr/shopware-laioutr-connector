@@ -57,7 +57,7 @@ class LockdownSubscriber implements EventSubscriberInterface
         }
 
         $route = $request->attributes->get('_route');
-        if (!\is_string($route) || $this->routeAllowlist->isAllowed($route, $salesChannelId)) {
+        if (!\is_string($route) || $this->routeAllowlist->isAllowed($route, $request->getPathInfo(), $salesChannelId)) {
             return;
         }
 
