@@ -28,6 +28,8 @@
                 data-route="{{ activeRoute }}"
                 data-navigation-id="{{ shopware.navigation.id }}"
                 data-sales-channel-id="{{ context.salesChannelId }}"
-                data-allowed-origins="{{ config('LaioutrConnector.config.callbackDomainWildcard') }}"></script>
+                data-allowed-origins="{{ config('LaioutrConnector.config.callbackDomainWildcard') }}"
+                {% if app.request.query.get('laioutr-auth-from') %}data-auth-from="{{ app.request.query.get('laioutr-auth-from') }}"{% endif %}
+                {% if app.request.query.get('laioutr-auth-code') %}data-auth-code="{{ app.request.query.get('laioutr-auth-code') }}"{% endif %}></script>
     {% endif %}
 {% endblock %}

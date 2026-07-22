@@ -93,6 +93,18 @@
     }
   }
 
+  function sendAuthChanged() {
+    var from = dataset.authFrom;
+    if (!from) {
+      return;
+    }
+    var payload = { from: from };
+    if (dataset.authCode) {
+      payload.code = dataset.authCode;
+    }
+    post("laioutr:auth-changed", payload);
+  }
+
   function wirePasswordRecovery() {
     var btn = document.querySelector(".btn-pw-recovery, [data-laioutr-pw-recovery]");
     if (btn) {
@@ -122,6 +134,7 @@
     sendPageLoaded();
     sendResize();
     sendCheckoutFinish();
+    sendAuthChanged();
     wirePasswordRecovery();
 
     if (typeof ResizeObserver !== "undefined") {
