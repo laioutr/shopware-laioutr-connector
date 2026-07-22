@@ -232,6 +232,8 @@ composer check
 
 Static analysis (`composer phpstan`) runs at level 9 over `src`. `phpstan-bootstrap.php` walks upwards until it finds a Composer autoloader that provides Shopware, so the same `phpstan.neon.dist` works from a Shopware project, from a Shopware monorepo checkout (Shopware's reusable PHPStan workflow), and standalone with the plugin's own vendor directory (`shopware-cli extension validate --full`).
 
+Those compatibility checks resolve Shopware into a throwaway directory, where `shopware/core` pins `dompdf/dompdf` 3.1.4 — a version with published advisories that Composer's advisory gate refuses to install. `config.policy.advisories.ignore` in `composer.json` exempts that single package. Composer only honours `config` of the root package, so this applies to work in this repository and never to a shop that installs the plugin.
+
 CI independently provisions clean Shopware installations for every supported release line with Shopware's reusable GitHub Actions workflow.
 
 No Administration or Storefront **build** is required: the plugin ships Twig template overrides and one static JavaScript asset (`src/Resources/public/laioutr-embed.js`, served via `asset()`), with no webpack, Vite, or SCSS entrypoint — run `bin/console assets:install` to publish the asset. The embedded-mode Twig overrides and bridge are verified against a running dev shop with a theme assigned; Shopware's PHPUnit harness installs without a theme, so plugin storefront template overrides do not resolve under it and are not asserted there.
