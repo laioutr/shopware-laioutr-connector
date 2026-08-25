@@ -110,6 +110,27 @@
       payload.code = dataset.authCode;
     }
     post("laioutr:auth-changed", payload);
+    consumeAuthParams();
+  }
+
+  /**
+   * The code is single-use, so any later load of the same URL — switching payment method,
+   * a reload, back/forward — replays it and the redeem fails. Dropping it from the address
+   * bar also keeps a credential out of referrers and out of a URL the shopper might copy.
+   */
+  function consumeAuthParams() {
+    if (!window.history || !window.history.replaceState || typeof window.URL !== "function") {
+      return;
+    }
+
+    var url = new URL(window.location.href);
+    if (!url.searchParams.has("laioutr-auth-code") && !url.searchParams.has("laioutr-auth-from")) {
+      return;
+    }
+
+    url.searchParams.delete("laioutr-auth-code");
+    url.searchParams.delete("laioutr-auth-from");
+    window.history.replaceState(window.history.state, "", url.toString());
   }
 
   function wirePasswordRecovery() {
