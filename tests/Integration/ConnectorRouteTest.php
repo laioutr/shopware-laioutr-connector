@@ -198,6 +198,30 @@ class ConnectorRouteTest extends TestCase
         static::assertSame(Response::HTTP_METHOD_NOT_ALLOWED, $response->getStatusCode());
     }
 
+    public function testConnectSessionHonoursRouteParameters(): void
+    {
+        $code = static::getContainer()->get(SessionHandoffCodeService::class)->generateCode();
+        static::getContainer()->get(SessionHandoffStore::class)->issue(
+            $code,
+            'test-context-token',
+            $this->getSalesChannelId(),
+            'http://localhost/login-callback',
+            'http://localhost/logout-callback',
+            'frontend.account.edit-order.page',
+            null,
+            null,
+            ['orderId' => '01a038f7f84672b2b9a943e6586716ab'],
+        );
+
+        $response = $this->request('GET', 'laioutr/connect-session', ['code' => $code]);
+
+        static::assertSame(Response::HTTP_FOUND, $response->getStatusCode());
+        static::assertSame(
+            '/account/order/edit/01a038f7f84672b2b9a943e6586716ab',
+            $response->headers->get('Location'),
+        );
+    }
+
     private function issueCode(?string $salesChannelId = null): string
     {
         $code = static::getContainer()->get(SessionHandoffCodeService::class)->generateCode();

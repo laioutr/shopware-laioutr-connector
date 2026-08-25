@@ -12,6 +12,8 @@ class SessionStorage
 {
     private const LOGIN_SUCCESS_CALLBACK_KEY = 'laioutr-login-success-callback';
     private const LOGOUT_SUCCESS_CALLBACK_KEY = 'laioutr-logout-success-callback';
+    private const FINISH_SUCCESS_CALLBACK_KEY = 'laioutr-finish-success-callback';
+    private const CHECKOUT_CALLBACK_KEY = 'laioutr-checkout-callback';
 
     public function __construct(private readonly RequestStack $requestStack)
     {
@@ -35,6 +37,27 @@ class SessionStorage
     public function setLogoutSuccessCallback(string $logoutSuccessCallback): void
     {
         $this->set(self::LOGOUT_SUCCESS_CALLBACK_KEY, $logoutSuccessCallback);
+    }
+
+    public function getFinishSuccessCallback(): ?string
+    {
+        return $this->get(self::FINISH_SUCCESS_CALLBACK_KEY);
+    }
+
+    /** An empty value clears the target, so a checkout that carries none cannot inherit a stale one. */
+    public function setFinishSuccessCallback(?string $callback): void
+    {
+        $this->set(self::FINISH_SUCCESS_CALLBACK_KEY, $callback ?? '');
+    }
+
+    public function getCheckoutCallback(): ?string
+    {
+        return $this->get(self::CHECKOUT_CALLBACK_KEY);
+    }
+
+    public function setCheckoutCallback(?string $callback): void
+    {
+        $this->set(self::CHECKOUT_CALLBACK_KEY, $callback ?? '');
     }
 
     public function getContextToken(): ?string

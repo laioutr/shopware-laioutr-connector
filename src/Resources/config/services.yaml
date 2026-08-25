@@ -29,6 +29,7 @@ services:
         tags:
             - kernel.event_subscriber
     Laioutr\Connector\Session\Business\DomainWhitelistValidator: ~
+    Laioutr\Connector\Session\Business\ReturnTargetResolver: ~
     Laioutr\Connector\Session\Business\SessionHandoffCodeService: ~
 
     Laioutr\Connector\Session\Integration\SessionHandoffStore: ~
@@ -36,5 +37,11 @@ services:
     Laioutr\Connector\Embedded\Business\RouteBlocklist: ~
 
     Laioutr\Connector\Embedded\Subscriber\LockdownSubscriber:
+        tags:
+            - kernel.event_subscriber
+
+    Laioutr\Connector\Embedded\Business\CheckoutReturnDecision: ~
+
+    Laioutr\Connector\Embedded\Subscriber\CheckoutReturnSubscriber:
         tags:
             - kernel.event_subscriber

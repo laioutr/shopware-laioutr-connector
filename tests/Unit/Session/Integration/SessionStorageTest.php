@@ -66,4 +66,19 @@ class SessionStorageTest extends TestCase
         static::assertNotSame($before, $this->session->getId());
         static::assertSame('value', $this->session->get('keep'));
     }
+
+    public function testReturnTargetsAreClearedByANullWrite(): void
+    {
+        $this->sessionStorage->setFinishSuccessCallback('https://example.com/thank-you');
+        $this->sessionStorage->setCheckoutCallback('https://example.com/checkout');
+
+        static::assertSame('https://example.com/thank-you', $this->sessionStorage->getFinishSuccessCallback());
+        static::assertSame('https://example.com/checkout', $this->sessionStorage->getCheckoutCallback());
+
+        $this->sessionStorage->setFinishSuccessCallback(null);
+        $this->sessionStorage->setCheckoutCallback(null);
+
+        static::assertNull($this->sessionStorage->getFinishSuccessCallback());
+        static::assertNull($this->sessionStorage->getCheckoutCallback());
+    }
 }

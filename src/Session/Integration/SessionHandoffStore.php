@@ -16,6 +16,9 @@ class SessionHandoffStore
     ) {
     }
 
+    /**
+     * @param array<string, string>|null $redirectRouteParams
+     */
     public function issue(
         string $code,
         string $contextToken,
@@ -23,6 +26,9 @@ class SessionHandoffStore
         ?string $loginSuccessCallback,
         ?string $logoutSuccessCallback,
         ?string $redirectRoute,
+        ?string $finishSuccessCallback = null,
+        ?string $checkoutCallback = null,
+        ?array $redirectRouteParams = null,
     ): void {
         $now = new \DateTimeImmutable();
 
@@ -40,6 +46,11 @@ class SessionHandoffStore
             'login_success_callback' => $loginSuccessCallback,
             'logout_success_callback' => $logoutSuccessCallback,
             'redirect_route' => $redirectRoute,
+            'finish_success_callback' => $finishSuccessCallback,
+            'checkout_callback' => $checkoutCallback,
+            'redirect_route_params' => $redirectRouteParams === null
+                ? null
+                : json_encode($redirectRouteParams, \JSON_THROW_ON_ERROR),
             'expires_at' => $now->modify(
                 sprintf('+%d seconds', SessionHandoffCodeService::TTL_SECONDS),
             )->format('Y-m-d H:i:s.v'),
@@ -59,7 +70,10 @@ class SessionHandoffStore
                             LOWER(HEX(sales_channel_id)) AS sales_channel_id,
                             login_success_callback,
                             logout_success_callback,
-                            redirect_route
+                            redirect_route,
+                            finish_success_callback,
+                            checkout_callback,
+                            redirect_route_params
                        FROM laioutr_session_handoff
                       WHERE token_hash = :hash AND expires_at > :now
                       FOR UPDATE',
@@ -81,6 +95,9 @@ class SessionHandoffStore
                     self::nullableString($row['login_success_callback']),
                     self::nullableString($row['logout_success_callback']),
                     self::nullableString($row['redirect_route']),
+                    self::nullableString($row['finish_success_callback']),
+                    self::nullableString($row['checkout_callback']),
+                    self::decodeParams($row['redirect_route_params']),
                 );
             },
         );
@@ -102,5 +119,32 @@ class SessionHandoffStore
         }
 
         return self::requireString($value);
+    }
+
+    /**
+     * @return array<string, string>|null
+     */
+    private static function decodeParams(mixed $value): ?array
+    {
+        $json = self::nullableString($value);
+        if ($json === null) {
+            return null;
+        }
+
+        $decoded = json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        if (!\is_array($decoded)) {
+            return null;
+        }
+
+        // The column is free-form JSON, so an entry that is not a string pair cannot be trusted
+        // as a route parameter; dropping it leaves URL generation to fail closed on what remains.
+        $params = [];
+        foreach ($decoded as $key => $value) {
+            if (\is_string($key) && \is_string($value)) {
+                $params[$key] = $value;
+            }
+        }
+
+        return $params;
     }
 }

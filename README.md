@@ -50,6 +50,7 @@ Two independent per-sales-channel settings, both on by default.
 - **Bridge** — a small static script (`Resources/public/laioutr-embed.js`) is loaded and talks to the Laioutr parent frame over `postMessage`.
 - **Framing** — `X-Frame-Options` is not sent, so the storefront can be embedded.
 - **Top-level order submit** — the confirm form targets the top-level window rather than the frame, so redirect-based payment providers are never framed. See `POST /laioutr/checkout-order`.
+- **Return trip** — a checkout that left the frame is returned to Laioutr: a completed order redirects to the configured **Order success page** with `?order=`, and a failed or cancelled payment redirects to the **Checkout page** with `?retry-order=` and `&error-code=`. Un-embedded, only the success redirect applies; the storefront handles a retry itself. Both URLs must be on an allowed callback domain, and a URL that is not is ignored rather than followed.
 
 **Lockdown** (`lockdownEnabled`) answers a different question — who owns the content pages — and works **independently**: it redirects the pages Laioutr renders itself (home, listing, product detail, search, suggest, landing, standalone CMS pages and the wishlist) to the cart. **Everything else stays reachable**, including the routes payment plugins register. Add more under **Additional blocked routes**, one route name per line.
 
@@ -74,7 +75,7 @@ Every message uses the envelope `{ source: 'laioutr-shopware', version: 1, type,
 | --- | --- | --- |
 | shop → parent | `laioutr:ready` | `{}` |
 | shop → parent | `laioutr:resize` | `{ height }` |
-| shop → parent | `laioutr:page-loaded` | `{ path, route, navigationId, salesChannelId }` |
+| shop → parent | `laioutr:page-loaded` | `{ path, route, navigationId, salesChannelId, returnFallback }` |
 | shop → parent | `laioutr:checkout-finish` | `{ orderId }` |
 | shop → parent | `laioutr:pw-recovery` | `{}` |
 | shop → parent | `laioutr:auth-changed` | `{ from, code? }` |

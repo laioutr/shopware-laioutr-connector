@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Exception\MissingMandatoryParametersException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -49,8 +50,11 @@ class ConnectController
         // unknown route fails closed with a 400 instead of leaving the session
         // rewritten behind a 500.
         try {
-            $redirectUrl = $this->urlGenerator->generate($handoff->redirectRoute);
-        } catch (RouteNotFoundException $exception) {
+            $redirectUrl = $this->urlGenerator->generate(
+                $handoff->redirectRoute,
+                $handoff->redirectRouteParams ?? [],
+            );
+        } catch (RouteNotFoundException|MissingMandatoryParametersException $exception) {
             throw new BadRequestHttpException('Handoff redirect route is not registered', $exception);
         }
 
@@ -123,6 +127,10 @@ class ConnectController
         if ($handoff->logoutSuccessCallback !== null) {
             $this->sessionStorage->setLogoutSuccessCallback($handoff->logoutSuccessCallback);
         }
+        // Written unconditionally: a handoff carrying no target must clear whatever the previous
+        // checkout left behind, or a finished order would return to the page it was abandoned on.
+        $this->sessionStorage->setFinishSuccessCallback($handoff->finishSuccessCallback);
+        $this->sessionStorage->setCheckoutCallback($handoff->checkoutCallback);
         $this->sessionStorage->regenerate();
     }
 

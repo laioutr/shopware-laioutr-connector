@@ -16,4 +16,7 @@ final class EmbeddedConfig
 {
     public const EMBEDDED_MODE = 'LaioutrConnector.config.embeddedModeEnabled';
     public const LOCKDOWN = 'LaioutrConnector.config.lockdownEnabled';
+
+    public const FINISH_FALLBACK_URL = 'LaioutrConnector.config.finishFallbackUrl';
+    public const CHECKOUT_FALLBACK_URL = 'LaioutrConnector.config.checkoutFallbackUrl';
 }

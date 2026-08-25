@@ -99,4 +99,47 @@ class SessionHandoffStoreTest extends TestCase
         );
         static::assertSame(0, (int) $remaining);
     }
+
+    public function testIssueAndRedeemCarryReturnTargets(): void
+    {
+        $code = $this->codeService->generateCode();
+        $this->store->issue(
+            $code,
+            'ctx-token',
+            TestDefaults::SALES_CHANNEL,
+            'https://allowed.example/login',
+            'https://allowed.example/logout',
+            'frontend.account.edit-order.page',
+            'https://allowed.example/thank-you',
+            'https://allowed.example/checkout',
+            ['orderId' => '01a038f7f84672b2b9a943e6586716ab'],
+        );
+
+        $handoff = $this->store->redeem($code);
+
+        static::assertNotNull($handoff);
+        static::assertSame('https://allowed.example/thank-you', $handoff->finishSuccessCallback);
+        static::assertSame('https://allowed.example/checkout', $handoff->checkoutCallback);
+        static::assertSame(['orderId' => '01a038f7f84672b2b9a943e6586716ab'], $handoff->redirectRouteParams);
+    }
+
+    public function testReturnTargetsDefaultToNull(): void
+    {
+        $code = $this->codeService->generateCode();
+        $this->store->issue(
+            $code,
+            'ctx-token',
+            TestDefaults::SALES_CHANNEL,
+            null,
+            null,
+            'frontend.checkout.confirm.page',
+        );
+
+        $handoff = $this->store->redeem($code);
+
+        static::assertNotNull($handoff);
+        static::assertNull($handoff->finishSuccessCallback);
+        static::assertNull($handoff->checkoutCallback);
+        static::assertNull($handoff->redirectRouteParams);
+    }
 }

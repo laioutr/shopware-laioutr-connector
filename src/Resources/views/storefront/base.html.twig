@@ -30,6 +30,7 @@
                 data-sales-channel-id="{{ context.salesChannelId }}"
                 data-allowed-origins="{{ config('LaioutrConnector.config.callbackDomainWildcard') }}"
                 data-checkout-order-url="{{ path('frontend.laioutr.checkout-order') }}"
+                data-return-fallback="{{ config('LaioutrConnector.config.finishFallbackUrl') ? '1' : '' }}"
                 {% if app.request.query.get('laioutr-auth-from') %}data-auth-from="{{ app.request.query.get('laioutr-auth-from') }}"{% endif %}
                 {% if app.request.query.get('laioutr-auth-code') %}data-auth-code="{{ app.request.query.get('laioutr-auth-code') }}"{% endif %}></script>
     {% endif %}

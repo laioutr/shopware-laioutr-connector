@@ -43,5 +43,21 @@
             <helpText>One storefront route name per line to redirect to the cart on top of the built-in list, for example a page a theme adds that Laioutr renders itself (e.g. frontend.example.page).</helpText>
             <helpText lang="de-DE">Ein Storefront-Routenname pro Zeile, der zusätzlich zur eingebauten Liste zum Warenkorb umgeleitet wird, z. B. eine vom Theme ergänzte Seite, die Laioutr selbst rendert (etwa frontend.example.page).</helpText>
         </input-field>
+
+        <input-field type="url">
+            <name>finishFallbackUrl</name>
+            <label>Order success page</label>
+            <label lang="de-DE">Bestellbestätigungsseite</label>
+            <helpText>Absolute URL of the Laioutr page a shopper reaches after a completed order. The order id is appended as ?order=. Must be an allowed callback domain. Leave empty to show Shopware's own confirmation page.</helpText>
+            <helpText lang="de-DE">Absolute URL der Laioutr-Seite, die Kunden nach einer abgeschlossenen Bestellung erreichen. Die Bestell-ID wird als ?order= angehängt. Muss eine erlaubte Callback-Domain sein. Leer lassen, um Shopwares eigene Bestätigungsseite zu zeigen.</helpText>
+        </input-field>
+
+        <input-field type="url">
+            <name>checkoutFallbackUrl</name>
+            <label>Checkout page (payment retry)</label>
+            <label lang="de-DE">Checkout-Seite (Zahlungswiederholung)</label>
+            <helpText>Absolute URL of the Laioutr checkout page a shopper returns to when a payment fails or is cancelled. Only used in embedded mode; un-embedded, the storefront handles the retry itself. Must be an allowed callback domain.</helpText>
+            <helpText lang="de-DE">Absolute URL der Laioutr-Checkout-Seite, zu der Kunden zurückkehren, wenn eine Zahlung fehlschlägt oder abgebrochen wird. Nur im eingebetteten Modus verwendet; ohne Einbettung übernimmt der Storefront die Wiederholung selbst. Muss eine erlaubte Callback-Domain sein.</helpText>
+        </input-field>
     </card>
 </config>

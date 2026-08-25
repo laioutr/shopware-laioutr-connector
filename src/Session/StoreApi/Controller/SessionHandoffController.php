@@ -41,6 +41,17 @@ class SessionHandoffController
             throw new BadRequestHttpException('Callback domain is not allowed');
         }
 
+        $finishSuccessCallback = $this->getOptionalBodyParameter($request, 'finish-success-callback');
+        $checkoutCallback = $this->getOptionalBodyParameter($request, 'checkout-callback');
+
+        foreach ([$finishSuccessCallback, $checkoutCallback] as $callback) {
+            if ($callback !== null && !$this->domainWhitelistValidator->isValidUrl($callback)) {
+                throw new BadRequestHttpException('Callback domain is not allowed');
+            }
+        }
+
+        $redirectRouteParams = $this->getOptionalRouteParams($request);
+
         $code = $this->codeService->generateCode();
 
         $this->store->issue(
@@ -50,9 +61,54 @@ class SessionHandoffController
             $loginSuccessCallback,
             $logoutSuccessCallback,
             $redirectRoute,
+            $finishSuccessCallback,
+            $checkoutCallback,
+            $redirectRouteParams,
         );
 
         return new JsonResponse(['code' => $code]);
+    }
+
+    /**
+     * @return array<string, string>|null
+     */
+    private function getOptionalRouteParams(Request $request): ?array
+    {
+        $value = $request->request->all()['redirect-route-params'] ?? null;
+
+        if ($value === null) {
+            return null;
+        }
+
+        if (!\is_array($value)) {
+            throw new BadRequestHttpException('Parameter "redirect-route-params" must be an object');
+        }
+
+        $params = [];
+        foreach ($value as $key => $item) {
+            if (!\is_string($key) || !\is_string($item)) {
+                throw new BadRequestHttpException('Parameter "redirect-route-params" must map strings to strings');
+            }
+
+            $params[$key] = $item;
+        }
+
+        return $params;
+    }
+
+    private function getOptionalBodyParameter(Request $request, string $name): ?string
+    {
+        $value = $request->request->all()[$name] ?? null;
+
+        if ($value === null) {
+            return null;
+        }
+
+        if (!\is_string($value) || trim($value) === '') {
+            throw new BadRequestHttpException(sprintf('Parameter "%s" must be a non-empty string', $name));
+        }
+
+        return $value;
     }
 
     private function getRequiredBodyParameter(Request $request, string $name): string

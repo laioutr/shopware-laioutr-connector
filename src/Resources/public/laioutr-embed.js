@@ -88,7 +88,8 @@
       path: window.location.pathname,
       route: dataset.route || null,
       navigationId: dataset.navigationId || null,
-      salesChannelId: dataset.salesChannelId || null
+      salesChannelId: dataset.salesChannelId || null,
+      returnFallback: dataset.returnFallback === "1"
     });
   }
 

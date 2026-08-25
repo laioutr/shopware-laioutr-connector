@@ -91,4 +91,51 @@ class SessionHandoffControllerApiTest extends TestCase
         $countAfter = (int) $connection->fetchOne('SELECT COUNT(*) FROM laioutr_session_handoff');
         static::assertSame($countBefore, $countAfter);
     }
+
+    /**
+     * @param array<string, mixed> $body
+     */
+    private function issue(array $body): Response
+    {
+        $browser = $this->getSalesChannelBrowser();
+        $browser->request(
+            'POST',
+            '/store-api/laioutr/session-handoff',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode($body, \JSON_THROW_ON_ERROR),
+        );
+
+        return $browser->getResponse();
+    }
+
+    public function testIssueRejectsDisallowedFinishCallback(): void
+    {
+        $response = $this->issue([
+            'login-success-callback' => 'https://allowed.example/login',
+            'logout-success-callback' => 'https://allowed.example/logout',
+            'redirect-route' => 'frontend.checkout.confirm.page',
+            'finish-success-callback' => 'https://not-allowed.example/thanks',
+        ]);
+
+        static::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+    }
+
+    public function testIssueAcceptsAllowedReturnTargets(): void
+    {
+        $response = $this->issue([
+            'login-success-callback' => 'https://allowed.example/login',
+            'logout-success-callback' => 'https://allowed.example/logout',
+            'redirect-route' => 'frontend.checkout.confirm.page',
+            'finish-success-callback' => 'https://allowed.example/thank-you',
+            'checkout-callback' => 'https://allowed.example/checkout',
+        ]);
+
+        static::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $content = json_decode((string) $response->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        static::assertIsArray($content);
+        static::assertNotEmpty($content['code'] ?? null);
+    }
 }
