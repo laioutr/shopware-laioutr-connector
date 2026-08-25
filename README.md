@@ -56,6 +56,18 @@ Two independent per-sales-channel settings, both on by default.
 
 The two are independent in both directions. Lockdown without embedded mode is the right setting when Laioutr renders the content but sends shoppers to this storefront's own checkout on its own domain — the storefront keeps its chrome and stays un-framed, while stray hits on product or listing URLs still go to the cart. Embedded mode without lockdown is how you diagnose a payment method misbehaving in the frame, without un-framing the shop or restoring its header.
 
+In that redirect setup the storefront is reached at top level, so it keeps a first-party session of its own and no payment provider ever sees a frame — none of the break-out machinery above applies. What it costs instead is session sync. Shopware rotates the context token when a shopper logs in, registers or checks out as a guest, and Laioutr cannot see that happen in another cookie jar, so it would come back holding a stale guest token: the shopper reads as logged out, and the order they just placed is unreadable.
+
+So a login or logout bounces the browser through Laioutr and straight back to wherever Shopware was sending it. The shopper stays in checkout, and both sides end up on the same token. Callback redirects carry three parameters:
+
+| Parameter | When |
+| --- | --- |
+| `from` | Always — the route the change happened on. |
+| `code` | Login only. A single-use handoff code for the rotated context token, redeemed server-to-server. |
+| `return-to` | When there is a destination to resume, which is every auth change during checkout. Absent for the account pages, where keeping the shopper on Laioutr is the point. |
+
+Point the callbacks at a Laioutr route that redeems the code and honours `return-to`; `@laioutr/app-shopware` does this from `GET /app-shopware/adopt-session`. The Shopware context token itself still never appears in a URL.
+
 Upgrading from a version that had only `embeddedModeEnabled` carries that value into `lockdownEnabled` at every scope where it was set, so behaviour does not change until you change it.
 
 **Installing _or updating_ the plugin applies both defaults immediately on every channel** — including an existing install the first time it updates onto this version. Run `bin/console assets:install` after installing or updating so `laioutr-embed.js` is published to `public/bundles/laioutrconnector/`. To browse the raw storefront during development:
@@ -161,7 +173,7 @@ Example:
 
 The plugin redeems the code, verifies it was issued for the requesting sales channel, installs the context into the storefront session, and regenerates the session id before redirecting to the stored route so the shopper lands there with their basket.
 
-Callback redirects append only the URL-encoded `from` route. The Shopware context token is never included in the callback payload.
+Callback redirects append the URL-encoded `from` route, plus `code` and `return-to` as described under embedded storefront mode. The Shopware context token is never included in the callback payload.
 
 ### `POST /laioutr/checkout-order`
 

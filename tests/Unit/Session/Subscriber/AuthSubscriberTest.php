@@ -44,7 +44,7 @@ class AuthSubscriberTest extends TestCase
 
         $callback = $this->createMock(CallbackRedirector::class);
         $callback->expects(static::once())->method('scheduleLoginCallback')
-            ->with(static::isInstanceOf(Request::class), 'frontend.account.login');
+            ->with(static::isInstanceOf(Request::class), 'ctx-token', 'sc-id', 'frontend.account.login', true);
 
         $subscriber = new AuthSubscriber(
             $this->requestStackWithRoute('frontend.account.login'),
@@ -70,6 +70,25 @@ class AuthSubscriberTest extends TestCase
             $callback,
             $notifier,
             $this->configService(true),
+        );
+
+        $subscriber->onLogoutSuccess($this->logoutEvent('sc-id'));
+    }
+
+    public function testLogoutOutsideEmbeddedModeSendsTheShopperBack(): void
+    {
+        $notifier = $this->createMock(AuthBridgeNotifier::class);
+        $notifier->expects(static::never())->method('scheduleLogout');
+
+        $callback = $this->createMock(CallbackRedirector::class);
+        $callback->expects(static::once())->method('scheduleLogoutCallback')
+            ->with(static::isInstanceOf(Request::class), 'frontend.account.logout', true);
+
+        $subscriber = new AuthSubscriber(
+            $this->requestStackWithRoute('frontend.account.logout'),
+            $callback,
+            $notifier,
+            $this->configService(false),
         );
 
         $subscriber->onLogoutSuccess($this->logoutEvent('sc-id'));

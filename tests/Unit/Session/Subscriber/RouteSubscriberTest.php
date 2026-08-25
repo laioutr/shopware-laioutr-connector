@@ -28,7 +28,7 @@ class RouteSubscriberTest extends TestCase
     {
         $callback = $this->createMock(CallbackRedirector::class);
         $callback->expects(static::once())->method('scheduleLoginCallback')
-            ->with(static::isInstanceOf(Request::class), 'frontend.account.home.page');
+            ->with(static::isInstanceOf(Request::class), 'ctx-token', 'sc-id', 'frontend.account.home.page', false);
 
         $subscriber = new RouteSubscriber($callback, $this->configService(false));
         $subscriber->onPageLoaded($this->pageEvent('frontend.account.home.page', 'sc-id'));
@@ -50,6 +50,7 @@ class RouteSubscriberTest extends TestCase
         $context = $this->createStub(SalesChannelContext::class);
         $context->method('getCustomer')->willReturn($this->createStub(CustomerEntity::class));
         $context->method('getSalesChannelId')->willReturn($salesChannelId);
+        $context->method('getToken')->willReturn('ctx-token');
 
         $event = $this->createStub(GenericPageLoadedEvent::class);
         $event->method('getRequest')->willReturn($request);
