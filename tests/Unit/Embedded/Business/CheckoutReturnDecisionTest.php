@@ -88,4 +88,39 @@ class CheckoutReturnDecisionTest extends TestCase
             ),
         );
     }
+
+    public function testTheFramesOwnRetryNavigationIsLeftAlone(): void
+    {
+        $decision = new CheckoutReturnDecision();
+
+        // Redirecting this one would send the frame back to the page that opened it, forever.
+        static::assertNull($decision->decide(
+            self::EDIT,
+            200,
+            null,
+            'ord1',
+            self::THANKS,
+            self::CHECKOUT,
+            true,
+            null,
+            true,
+        ));
+    }
+
+    public function testAFinishHitCarryingTheMarkerIsLeftAlone(): void
+    {
+        $decision = new CheckoutReturnDecision();
+
+        static::assertNull($decision->decide(
+            self::FINISH,
+            200,
+            null,
+            'ord1',
+            self::THANKS,
+            self::CHECKOUT,
+            true,
+            null,
+            true,
+        ));
+    }
 }

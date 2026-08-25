@@ -16,6 +16,13 @@ class CheckoutReturnDecision
     public const FINISH_ROUTE = 'frontend.checkout.finish.page';
     public const EDIT_ORDER_ROUTE = 'frontend.account.edit-order.page';
 
+    /**
+     * Query key the frame stamps on its own navigation to the retry route. Without it this cannot
+     * be told apart from a shopper the provider bounced to the same route at top level, and the
+     * frame's retry would be sent back to Laioutr, which points the frame at the retry again.
+     */
+    public const RETRY_FRAME_MARKER = 'laioutr-retry';
+
     private const REGISTER_PATH = '/checkout/register';
     private const EDIT_ORDER_PATH = '/account/order/edit';
 
@@ -28,8 +35,13 @@ class CheckoutReturnDecision
         ?string $checkoutTarget,
         bool $embedded,
         ?string $errorCode = null,
+        bool $framedRetry = false,
     ): ?string {
         if ($orderId === null) {
+            return null;
+        }
+
+        if ($framedRetry) {
             return null;
         }
 

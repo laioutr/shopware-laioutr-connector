@@ -74,6 +74,7 @@ class CheckoutReturnSubscriber implements EventSubscriberInterface
             $this->returnTargetResolver->resolveCheckoutTarget($salesChannelId),
             $this->systemConfigService->getBool(EmbeddedConfig::EMBEDDED_MODE, $salesChannelId),
             $this->resolveErrorCode($request, $response),
+            \array_key_exists(CheckoutReturnDecision::RETRY_FRAME_MARKER, $request->query->all()),
         );
 
         if ($target === null) {
