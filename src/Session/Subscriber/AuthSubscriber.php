@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laioutr\Connector\Session\Subscriber;
 
+use Laioutr\Connector\Embedded\EmbeddedConfig;
 use Laioutr\Connector\Session\Integration\AuthBridgeNotifier;
 use Laioutr\Connector\Session\Integration\CallbackRedirector;
 use Shopware\Core\Checkout\Customer\Event\CustomerLoginEvent;
@@ -14,7 +15,6 @@ use Symfony\Component\HttpFoundation\RequestStack;
 
 class AuthSubscriber implements EventSubscriberInterface
 {
-    private const EMBEDDED_MODE_CONFIG_KEY = 'LaioutrConnector.config.embeddedModeEnabled';
 
     public function __construct(
         private readonly RequestStack $requestStack,
@@ -82,6 +82,6 @@ class AuthSubscriber implements EventSubscriberInterface
 
     private function isEmbedded(string $salesChannelId): bool
     {
-        return $this->systemConfigService->getBool(self::EMBEDDED_MODE_CONFIG_KEY, $salesChannelId);
+        return $this->systemConfigService->getBool(EmbeddedConfig::EMBEDDED_MODE, $salesChannelId);
     }
 }

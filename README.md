@@ -42,16 +42,26 @@ bin/console system:config:set \
 
 ## Embedded storefront mode
 
-When **embedded mode** is enabled — the default, so it is an opt-out — the storefront acts as the embedded commerce backend for a Laioutr-rendered frontend:
+Two independent per-sales-channel settings, both on by default.
 
-- **Lockdown** — every storefront route except the cart, checkout, account, plugin session flows, and storefront widget/AJAX fragments (`/widgets/*` paths and `widgets.*` routes such as product quick view) redirects to the cart. Add exceptions (for example a payment plugin's return route) under **Additional allowed routes**, one route name per line.
+**Embedded mode** (`embeddedModeEnabled`) makes the storefront usable as the commerce backend for a Laioutr-rendered frontend. It is required for the integration to work:
+
 - **Hidden chrome** — the storefront header, navigation, footer, and the built-in cookie-consent bar are not rendered; Laioutr provides them and owns consent in the frame.
 - **Bridge** — a small static script (`Resources/public/laioutr-embed.js`) is loaded and talks to the Laioutr parent frame over `postMessage`.
+- **Framing** — `X-Frame-Options` is not sent, so the storefront can be embedded.
+- **Top-level order submit** — the confirm form targets the top-level window rather than the frame, so redirect-based payment providers are never framed. See `POST /laioutr/checkout-order`.
 
-Embedded mode is a per-sales-channel setting. **Installing _or updating_ the plugin locks the storefront down immediately on every channel where the setting is on** — the default also applies to an existing install the first time it updates onto this version. Disable it on any channel that should keep the full storefront. Run `bin/console assets:install` after installing or updating the plugin so `laioutr-embed.js` is published to `public/bundles/laioutrconnector/`. To browse the raw storefront during development, turn it off:
+**Lockdown** (`lockdownEnabled`) answers a different question — who owns the content pages — and works **independently**: it redirects the pages Laioutr renders itself (home, listing, product detail, search, suggest, landing, standalone CMS pages and the wishlist) to the cart. **Everything else stays reachable**, including the routes payment plugins register. Add more under **Additional blocked routes**, one route name per line.
+
+The two are independent in both directions. Lockdown without embedded mode is the right setting when Laioutr renders the content but sends shoppers to this storefront's own checkout on its own domain — the storefront keeps its chrome and stays un-framed, while stray hits on product or listing URLs still go to the cart. Embedded mode without lockdown is how you diagnose a payment method misbehaving in the frame, without un-framing the shop or restoring its header.
+
+Upgrading from a version that had only `embeddedModeEnabled` carries that value into `lockdownEnabled` at every scope where it was set, so behaviour does not change until you change it.
+
+**Installing _or updating_ the plugin applies both defaults immediately on every channel** — including an existing install the first time it updates onto this version. Run `bin/console assets:install` after installing or updating so `laioutr-embed.js` is published to `public/bundles/laioutrconnector/`. To browse the raw storefront during development:
 
 ```bash
-bin/console system:config:set -j LaioutrConnector.config.embeddedModeEnabled false
+bin/console system:config:set -j LaioutrConnector.config.lockdownEnabled false      # keep the frame, drop the route restriction
+bin/console system:config:set -j LaioutrConnector.config.embeddedModeEnabled false  # leave embedded mode entirely
 ```
 
 The `-j` flag stores a real JSON boolean. Without it the CLI stores the string `"false"`, which `getBool()` and the Twig `config()` function both read as truthy — leaving embedded mode enabled. The Administration toggle stores booleans correctly, so this only matters when setting the flag from the CLI.
@@ -69,6 +79,9 @@ Every message uses the envelope `{ source: 'laioutr-shopware', version: 1, type,
 | shop → parent | `laioutr:pw-recovery` | `{}` |
 | shop → parent | `laioutr:auth-changed` | `{ from, code? }` |
 | parent → shop | `laioutr:init` | `{}` (its origin becomes the pinned target) |
+| parent → shop | `laioutr:order-handoff` | `{ code }` |
+
+`laioutr:order-handoff` carries a single-use code the confirm form submits to `POST /laioutr/checkout-order`; the parent re-posts it while the shopper is on the confirm page, since codes expire in 60 seconds. Until one arrives the form is left submitting in-frame.
 
 `laioutr:auth-changed` fires in embedded mode after a storefront login (`from` = the login route, `code` present) or logout (`from` = the logout route, no `code`). `code` is a single-use handoff code the parent redeems server-to-server at `POST /store-api/laioutr/session-adopt` for the customer-bound context token; the token never enters the browser.
 
@@ -148,6 +161,16 @@ Example:
 The plugin redeems the code, verifies it was issued for the requesting sales channel, installs the context into the storefront session, and regenerates the session id before redirecting to the stored route so the shopper lands there with their basket.
 
 Callback redirects append only the URL-encoded `from` route. The Shopware context token is never included in the callback payload.
+
+### `POST /laioutr/checkout-order`
+
+Installs a session from a single-use handoff code, then forwards the submission to Shopware's order route with a `307` so its method and body survive.
+
+| Parameter | Description |
+| --- | --- |
+| `code` | Single-use code returned by `POST /store-api/laioutr/session-handoff`, carried as a form field |
+
+In embedded mode the bridge script retargets the confirm form at the top-level window once Laioutr posts it a code, because redirect-based payment providers refuse to render in a frame and cannot navigate back out of one. That top-level request carries no storefront session when Laioutr and the storefront sit on different registrable domains, which is what the code establishes. Laioutr re-mints while the shopper is on the confirm page, since codes expire in 60 seconds.
 
 ### `GET /laioutr/cookie-bridge`
 

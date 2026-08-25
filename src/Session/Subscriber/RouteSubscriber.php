@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Laioutr\Connector\Session\Subscriber;
 
+use Laioutr\Connector\Embedded\EmbeddedConfig;
 use Laioutr\Connector\Session\Integration\CallbackRedirector;
 use Shopware\Core\PlatformRequest;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
@@ -32,7 +33,6 @@ class RouteSubscriber implements EventSubscriberInterface
         'frontend.account.payment.save',
     ];
 
-    private const EMBEDDED_MODE_CONFIG_KEY = 'LaioutrConnector.config.embeddedModeEnabled';
 
     public function __construct(
         private readonly CallbackRedirector $callbackRedirector,
@@ -68,7 +68,7 @@ class RouteSubscriber implements EventSubscriberInterface
 
         // Embedded mode: account/order pages render inside the frame; the bridge (not a 302
         // to the laioutr origin) carries auth changes, so never schedule the external callback.
-        if ($this->systemConfigService->getBool(self::EMBEDDED_MODE_CONFIG_KEY, $context->getSalesChannelId())) {
+        if ($this->systemConfigService->getBool(EmbeddedConfig::EMBEDDED_MODE, $context->getSalesChannelId())) {
             return;
         }
 
@@ -80,8 +80,33 @@ class RouteSubscriber implements EventSubscriberInterface
         $this->callbackRedirector->applyScheduledCallback($event);
     }
 
+    /**
+     * Shopware's CoreSubscriber sets `x-frame-options: deny` on every response, which would stop
+     * the storefront being embedded at all. Drop it only where embedding is actually wanted, so a
+     * sales channel that opts out of embedded mode keeps its clickjacking protection.
+     *
+     * Requests with no resolved sales channel — the Administration, the API, anything failing
+     * before domain resolution — keep the header too. That is the safe direction: at worst an
+     * early error response refuses to frame.
+     *
+     * Embedding is still gated at the deployment level; see the `frame-ancestors` note in the
+     * README, which remains the boundary controlling *which* origins may embed.
+     */
     public function removeFrameOptionsHeader(ResponseEvent $event): void
     {
+        if (!$event->isMainRequest()) {
+            return;
+        }
+
+        $salesChannelId = $event->getRequest()->attributes->get(PlatformRequest::ATTRIBUTE_SALES_CHANNEL_ID);
+        if (!\is_string($salesChannelId)) {
+            return;
+        }
+
+        if (!$this->systemConfigService->getBool(EmbeddedConfig::EMBEDDED_MODE, $salesChannelId)) {
+            return;
+        }
+
         $event->getResponse()->headers->remove(PlatformRequest::HEADER_FRAME_OPTIONS);
     }
 }

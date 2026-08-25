@@ -20,19 +20,28 @@
 
         <input-field type="bool">
             <name>embeddedModeEnabled</name>
-            <label>Enable embedded mode (lockdown, hidden header/footer, Laioutr bridge)</label>
-            <label lang="de-DE">Eingebetteten Modus aktivieren (Lockdown, ausgeblendete Kopf-/Fußzeile, Laioutr-Bridge)</label>
-            <helpText>When enabled, only the cart, checkout, and account flows stay reachable — every other storefront route redirects to the cart. Header and footer are hidden and the Laioutr iframe bridge is loaded. Enabled by default; disable to opt out.</helpText>
-            <helpText lang="de-DE">Wenn aktiviert, bleiben nur Warenkorb-, Checkout- und Konto-Abläufe erreichbar — jede andere Storefront-Route wird zum Warenkorb umgeleitet. Kopf- und Fußzeile werden ausgeblendet und die Laioutr-Iframe-Bridge wird geladen. Standardmäßig aktiviert; zum Deaktivieren abwählen.</helpText>
+            <label>Enable embedded mode (hidden header/footer, Laioutr bridge, framing allowed)</label>
+            <label lang="de-DE">Eingebetteten Modus aktivieren (ausgeblendete Kopf-/Fußzeile, Laioutr-Bridge, Einbettung erlaubt)</label>
+            <helpText>When enabled, header and footer are hidden, the Laioutr iframe bridge is loaded, and the storefront may be framed. Required for the integration to work. Enabled by default; disable to opt out.</helpText>
+            <helpText lang="de-DE">Wenn aktiviert, werden Kopf- und Fußzeile ausgeblendet, die Laioutr-Iframe-Bridge wird geladen und der Storefront darf eingebettet werden. Für die Integration erforderlich. Standardmäßig aktiviert; zum Deaktivieren abwählen.</helpText>
+            <defaultValue>true</defaultValue>
+        </input-field>
+
+        <input-field type="bool">
+            <name>lockdownEnabled</name>
+            <label>Redirect Laioutr-owned pages to the cart</label>
+            <label lang="de-DE">Von Laioutr verwaltete Seiten zum Warenkorb umleiten</label>
+            <helpText>Redirects the storefront pages Laioutr renders itself — home, listing, product detail, search, landing and CMS pages — to the cart. Everything else stays reachable, including payment plugin routes. Independent of embedded mode: useful on its own when Laioutr sends shoppers to this storefront's own checkout rather than embedding it. Turn it off to diagnose a payment method that is misbehaving.</helpText>
+            <helpText lang="de-DE">Leitet die Storefront-Seiten, die Laioutr selbst rendert — Startseite, Listing, Produktdetail, Suche, Landing- und CMS-Seiten — zum Warenkorb um. Alles andere bleibt erreichbar, einschließlich Routen von Payment-Plugins. Unabhängig vom eingebetteten Modus: auch allein sinnvoll, wenn Laioutr Kunden zum eigenen Checkout dieses Storefronts schickt, statt ihn einzubetten. Zum Diagnostizieren einer fehlerhaften Zahlart deaktivieren.</helpText>
             <defaultValue>true</defaultValue>
         </input-field>
 
         <input-field type="textarea">
-            <name>lockdownAdditionalAllowedRoutes</name>
-            <label>Additional allowed routes</label>
-            <label lang="de-DE">Zusätzlich erlaubte Routen</label>
-            <helpText>One storefront route name per line to keep reachable under lockdown, for example a payment plugin's return route (e.g. frontend.example.return).</helpText>
-            <helpText lang="de-DE">Eine Storefront-Routenname pro Zeile, die unter Lockdown erreichbar bleiben soll, z. B. die Rückgabe-Route eines Payment-Plugins (etwa frontend.example.return).</helpText>
+            <name>lockdownAdditionalBlockedRoutes</name>
+            <label>Additional blocked routes</label>
+            <label lang="de-DE">Zusätzlich gesperrte Routen</label>
+            <helpText>One storefront route name per line to redirect to the cart on top of the built-in list, for example a page a theme adds that Laioutr renders itself (e.g. frontend.example.page).</helpText>
+            <helpText lang="de-DE">Ein Storefront-Routenname pro Zeile, der zusätzlich zur eingebauten Liste zum Warenkorb umgeleitet wird, z. B. eine vom Theme ergänzte Seite, die Laioutr selbst rendert (etwa frontend.example.page).</helpText>
         </input-field>
     </card>
 </config>

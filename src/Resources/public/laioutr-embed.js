@@ -3,7 +3,9 @@
  *
  * Runs on every storefront page when embedded mode is on. Talks to the Laioutr
  * parent frame over postMessage: reports content height for iframe sizing and
- * notifies the parent of page loads, checkout completion, and password recovery.
+ * notifies the parent of page loads, checkout completion, and password recovery,
+ * and retargets the confirm form at the top-level window once the parent supplies
+ * a session-handoff code.
  *
  * Every message uses the envelope { source, version, type, payload }. The parent
  * ignores anything without source === SOURCE. Data-bearing messages are buffered
@@ -15,6 +17,10 @@
 
   var SOURCE = "laioutr-shopware";
   var VERSION = 1;
+
+  var ORDER_FORM_SELECTOR = "#confirmOrderForm";
+  var HANDOFF_FIELD_NAME = "code";
+  var HANDOFF_FIELD_MARKER = "data-laioutr-handoff";
 
   var script = document.currentScript;
   var dataset = script ? script.dataset : {};
@@ -114,17 +120,61 @@
     }
   }
 
-  // Inbound: complete the handshake when the trusted parent replies.
+  /**
+   * Point the confirm form at the top-level window and carry the parent's handoff code,
+   * which installs a session there before the order is placed.
+   *
+   * Redirect-based payment providers refuse to render in a frame, and once framed they
+   * cannot navigate the top window back out — so the submit has to leave the frame. The
+   * form is only retargeted once a code has arrived: without one the redeem would reject
+   * the submit, and an in-frame submit is the better degraded state.
+   */
+  function applyOrderHandoffCode(code) {
+    if (typeof code !== "string" || code === "" || !dataset.checkoutOrderUrl) {
+      return;
+    }
+
+    var form = document.querySelector(ORDER_FORM_SELECTOR);
+    if (!form) {
+      return;
+    }
+
+    var field = form.querySelector("input[" + HANDOFF_FIELD_MARKER + "]");
+    if (!field) {
+      field = document.createElement("input");
+      field.type = "hidden";
+      field.name = HANDOFF_FIELD_NAME;
+      field.setAttribute(HANDOFF_FIELD_MARKER, "");
+      form.appendChild(field);
+    }
+    field.value = code;
+
+    // "_top" is the reserved keyword; a bare "top" names an ordinary browsing context and
+    // opens a window instead.
+    form.target = "_top";
+    form.action = dataset.checkoutOrderUrl;
+  }
+
+  // Inbound: complete the handshake when the trusted parent replies, and take the handoff
+  // codes it posts while the shopper sits on the confirm page.
   window.addEventListener("message", function (event) {
     var data = event.data;
-    if (!data || data.source !== SOURCE || data.type !== "laioutr:init") {
+    if (!data || data.source !== SOURCE) {
       return;
     }
     if (!originAllowed(event.origin)) {
       return;
     }
-    trustedOrigin = event.origin;
-    flushQueue();
+
+    if (data.type === "laioutr:init") {
+      trustedOrigin = event.origin;
+      flushQueue();
+      return;
+    }
+
+    if (data.type === "laioutr:order-handoff") {
+      applyOrderHandoffCode(data.payload ? data.payload.code : null);
+    }
   });
 
   function init() {

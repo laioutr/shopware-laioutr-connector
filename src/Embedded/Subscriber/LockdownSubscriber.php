@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Laioutr\Connector\Embedded\Subscriber;
 
-use Laioutr\Connector\Embedded\Business\RouteAllowlist;
+use Laioutr\Connector\Embedded\Business\RouteBlocklist;
+use Laioutr\Connector\Embedded\EmbeddedConfig;
 use Shopware\Core\PlatformRequest;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Shopware\Storefront\Framework\Routing\StorefrontRouteScope;
@@ -16,12 +17,10 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class LockdownSubscriber implements EventSubscriberInterface
 {
-    public const CONFIG_KEY_EMBEDDED_MODE = 'LaioutrConnector.config.embeddedModeEnabled';
-
     private const REDIRECT_ROUTE = 'frontend.checkout.cart.page';
 
     public function __construct(
-        private readonly RouteAllowlist $routeAllowlist,
+        private readonly RouteBlocklist $routeBlocklist,
         private readonly SystemConfigService $systemConfigService,
         private readonly UrlGeneratorInterface $urlGenerator,
     ) {
@@ -52,17 +51,30 @@ class LockdownSubscriber implements EventSubscriberInterface
         $salesChannelId = $request->attributes->get(PlatformRequest::ATTRIBUTE_SALES_CHANNEL_ID);
         $salesChannelId = \is_string($salesChannelId) ? $salesChannelId : null;
 
-        if (!$this->systemConfigService->getBool(self::CONFIG_KEY_EMBEDDED_MODE, $salesChannelId)) {
+        if (!$this->isLockdownEnabled($salesChannelId)) {
             return;
         }
 
         $route = $request->attributes->get('_route');
-        if (!\is_string($route) || $this->routeAllowlist->isAllowed($route, $request->getPathInfo(), $salesChannelId)) {
+        if (!\is_string($route) || !$this->routeBlocklist->isBlocked($route, $salesChannelId)) {
             return;
         }
 
         $event->setResponse(
             new RedirectResponse($this->urlGenerator->generate(self::REDIRECT_ROUTE)),
         );
+    }
+
+    /**
+     * `config.xml` defaults are written to `system_config` only when the plugin installs, so a
+     * field introduced in a later version has no stored value on an existing install — and
+     * `getBool()` cannot tell that apart from an explicit `false`. Fall back to the documented
+     * default rather than silently dropping lockdown on upgrade.
+     */
+    private function isLockdownEnabled(?string $salesChannelId): bool
+    {
+        $value = $this->systemConfigService->get(EmbeddedConfig::LOCKDOWN, $salesChannelId);
+
+        return $value === null || (bool) $value;
     }
 }

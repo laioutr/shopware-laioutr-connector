@@ -33,7 +33,7 @@ services:
 
     Laioutr\Connector\Session\Integration\SessionHandoffStore: ~
 
-    Laioutr\Connector\Embedded\Business\RouteAllowlist: ~
+    Laioutr\Connector\Embedded\Business\RouteBlocklist: ~
 
     Laioutr\Connector\Embedded\Subscriber\LockdownSubscriber:
         tags:
