@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.1.0](https://github.com/laioutr/shopware-laioutr-connector/compare/v1.0.0...v1.1.0) (2026-08-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* `lockdownAdditionalAllowedRoutes` is replaced by `lockdownAdditionalBlockedRoutes`. The key is renamed rather than reused because its meaning inverts — every route an admin had allowed would otherwise have become blocked. Re-enter any values under the new setting.
+
+### Features
+
+* return the shopper to laioutr after a checkout that left the frame ([3e8e3f7](https://github.com/laioutr/shopware-laioutr-connector/commit/3e8e3f790102d653656cf6d3cd1697f45b80c8b9))
+* split lockdown from embedded mode and block only Laioutr-owned routes ([a76c847](https://github.com/laioutr/shopware-laioutr-connector/commit/a76c84757d5e56075229ad2423a9f6b8f29ae284))
+* submit a payment retry from the top-level window too ([ac7f132](https://github.com/laioutr/shopware-laioutr-connector/commit/ac7f1323292a50f7d331590bb3010162c9a960f2))
+
+
+### Bug Fixes
+
+* consume the auth code from the storefront URL after announcing it ([508e1dd](https://github.com/laioutr/shopware-laioutr-connector/commit/508e1dd1a8cfcfa108b715c704bfa2b827ec209d))
+* leave the frame's own navigation to the retry route in place ([6740f48](https://github.com/laioutr/shopware-laioutr-connector/commit/6740f486824fe6b5488aa0ed574d2eb328245c8d))
+
+
+### Miscellaneous Chores
+
+* release 1.1.0 ([bdb50d2](https://github.com/laioutr/shopware-laioutr-connector/commit/bdb50d22172a17ed9dc99452ef2e046953508614))
+
 ## 1.0.0 (2026-07-22)
 
 
