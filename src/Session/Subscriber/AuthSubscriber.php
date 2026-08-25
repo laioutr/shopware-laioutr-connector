@@ -56,7 +56,15 @@ class AuthSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $this->callbackRedirector->scheduleLoginCallback($request, $route);
+        // The shopper keeps whatever they were doing: a login inside checkout has to return
+        // there, not end on laioutr.
+        $this->callbackRedirector->scheduleLoginCallback(
+            $request,
+            $context->getToken(),
+            $context->getSalesChannelId(),
+            $route,
+            true,
+        );
     }
 
     public function onLogoutSuccess(CustomerLogoutEvent $event): void
@@ -77,7 +85,7 @@ class AuthSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $this->callbackRedirector->scheduleLogoutCallback($request, $route);
+        $this->callbackRedirector->scheduleLogoutCallback($request, $route, true);
     }
 
     private function isEmbedded(string $salesChannelId): bool

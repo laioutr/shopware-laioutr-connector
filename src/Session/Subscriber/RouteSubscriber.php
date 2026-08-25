@@ -72,7 +72,15 @@ class RouteSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $this->callbackRedirector->scheduleLoginCallback($request, $route);
+        // No return target: these are pages laioutr renders itself, so keeping the shopper
+        // there is the whole point of the bounce.
+        $this->callbackRedirector->scheduleLoginCallback(
+            $request,
+            $context->getToken(),
+            $context->getSalesChannelId(),
+            $route,
+            false,
+        );
     }
 
     public function applyScheduledCallback(ResponseEvent $event): void
