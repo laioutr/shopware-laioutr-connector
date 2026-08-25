@@ -22,6 +22,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 class ConnectController
 {
     private const ORDER_ROUTE = 'frontend.checkout.finish.order';
+    private const RETRY_ORDER_ROUTE = 'frontend.account.edit-order.update-order';
 
     public function __construct(
         private readonly DomainWhitelistValidator $domainWhitelistValidator,
@@ -72,6 +73,10 @@ class ConnectController
      * cannot navigate back out. That top-level request carries no storefront session when
      * laioutr and the storefront sit on different registrable domains, so the form brings a
      * handoff code along to establish one here.
+     *
+     * A submit carrying an order id is a retry: that order already exists and its cart is gone,
+     * so it forwards to the route that can still take payment for it. Ownership is not checked
+     * here — the target route only pays an order belonging to the session installed above.
      */
     #[Route(
         path: '/laioutr/checkout-order',
@@ -84,7 +89,11 @@ class ConnectController
 
         $handoff = $this->redeem($code, $context);
 
-        $orderUrl = $this->urlGenerator->generate(self::ORDER_ROUTE);
+        $retryOrderId = $this->getOptionalOrderId($request);
+
+        $orderUrl = $retryOrderId === null ?
+            $this->urlGenerator->generate(self::ORDER_ROUTE)
+            : $this->urlGenerator->generate(self::RETRY_ORDER_ROUTE, ['orderId' => $retryOrderId]);
 
         $this->installSession($handoff);
 
@@ -140,6 +149,25 @@ class ConnectController
 
         if (!\is_string($value) || trim($value) === '') {
             throw new BadRequestHttpException(sprintf('Query parameter "%s" must be a non-empty string', $name));
+        }
+
+        return $value;
+    }
+
+    /**
+     * Rejects anything that is not a Shopware id rather than handing it to URL generation, so a
+     * malformed submit fails closed here instead of somewhere further in.
+     */
+    private function getOptionalOrderId(Request $request): ?string
+    {
+        $value = $request->request->all()['orderId'] ?? null;
+
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (!\is_string($value) || preg_match('/^[0-9a-f]{32}$/', $value) !== 1) {
+            throw new BadRequestHttpException('Parameter "orderId" must be a Shopware id');
         }
 
         return $value;

@@ -1,0 +1,10 @@
+{% sw_extends '@Storefront/storefront/page/account/order/index.html.twig' %}
+
+{# Marks which order the retry form pays, so the top-level submit reaches the route that can
+   still take payment for it rather than the one that creates a new order from the cart. #}
+{% block page_checkout_aside_actions %}
+    {{ parent() }}
+    {% if config('LaioutrConnector.config.embeddedModeEnabled') %}
+        <div data-laioutr-retry-order-id="{{ page.order.id }}" hidden></div>
+    {% endif %}
+{% endblock %}

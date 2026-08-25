@@ -21,6 +21,9 @@
   var ORDER_FORM_SELECTOR = "#confirmOrderForm";
   var HANDOFF_FIELD_NAME = "code";
   var HANDOFF_FIELD_MARKER = "data-laioutr-handoff";
+  var RETRY_ORDER_ATTRIBUTE = "data-laioutr-retry-order-id";
+  var RETRY_ORDER_FIELD_NAME = "orderId";
+  var RETRY_ORDER_FIELD_MARKER = "data-laioutr-retry-order";
 
   var script = document.currentScript;
   var dataset = script ? script.dataset : {};
@@ -171,10 +174,39 @@
     }
     field.value = code;
 
+    applyRetryOrderId(form);
+
     // "_top" is the reserved keyword; a bare "top" names an ordinary browsing context and
     // opens a window instead.
     form.target = "_top";
     form.action = dataset.checkoutOrderUrl;
+  }
+
+  /**
+   * On the order-edit page the form pays an order that already exists, and its own action says
+   * which one. Retargeting drops that action, so the order travels in the body instead and the
+   * handoff route forwards to the matching route rather than to order creation.
+   */
+  function applyRetryOrderId(form) {
+    var marker = document.querySelector("[" + RETRY_ORDER_ATTRIBUTE + "]");
+    if (!marker) {
+      return;
+    }
+
+    var orderId = marker.getAttribute(RETRY_ORDER_ATTRIBUTE);
+    if (!orderId) {
+      return;
+    }
+
+    var field = form.querySelector("input[" + RETRY_ORDER_FIELD_MARKER + "]");
+    if (!field) {
+      field = document.createElement("input");
+      field.type = "hidden";
+      field.name = RETRY_ORDER_FIELD_NAME;
+      field.setAttribute(RETRY_ORDER_FIELD_MARKER, "");
+      form.appendChild(field);
+    }
+    field.value = orderId;
   }
 
   // Inbound: complete the handshake when the trusted parent replies, and take the handoff

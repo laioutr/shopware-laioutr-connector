@@ -156,6 +156,43 @@ class ConnectorRouteTest extends TestCase
         static::assertSame('/checkout/order', $response->headers->get('Location'));
     }
 
+    public function testCheckoutOrderForwardsARetryToTheOrderEditRoute(): void
+    {
+        $response = $this->request('POST', 'laioutr/checkout-order', [
+            'code' => $this->issueCode(),
+            'orderId' => '01a038f7f84672b2b9a943e6586716ab',
+        ]);
+
+        // The retry pays an order that already exists; the order route would try to build a new
+        // one from a cart that is gone.
+        static::assertSame(Response::HTTP_TEMPORARY_REDIRECT, $response->getStatusCode());
+        static::assertSame(
+            '/account/order/update/01a038f7f84672b2b9a943e6586716ab',
+            $response->headers->get('Location'),
+        );
+    }
+
+    public function testCheckoutOrderRejectsAMalformedOrderId(): void
+    {
+        $response = $this->request('POST', 'laioutr/checkout-order', [
+            'code' => $this->issueCode(),
+            'orderId' => '../../etc/passwd',
+        ]);
+
+        static::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+    }
+
+    public function testCheckoutOrderTreatsAnEmptyOrderIdAsNoRetry(): void
+    {
+        $response = $this->request('POST', 'laioutr/checkout-order', [
+            'code' => $this->issueCode(),
+            'orderId' => '',
+        ]);
+
+        static::assertSame(Response::HTTP_TEMPORARY_REDIRECT, $response->getStatusCode());
+        static::assertSame('/checkout/order', $response->headers->get('Location'));
+    }
+
     public function testCheckoutOrderCodeIsSingleUse(): void
     {
         $code = $this->issueCode();
