@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.0](https://github.com/laioutr/shopware-laioutr-connector/compare/v1.1.0...v1.2.0) (2026-11-07)
+
+
+### Features
+
+* support Shopware 6.5 ([453c6dc](https://github.com/laioutr/shopware-laioutr-connector/commit/453c6dca8545ae8ed8862805a4331b9ea46d8979))
+* support Shopware 6.5 ([013d6fb](https://github.com/laioutr/shopware-laioutr-connector/commit/013d6fbdb611fbca6d428d6be5de380028168aee))
+
+
+### Miscellaneous Chores
+
+* make CI pass on main ([4eb2b55](https://github.com/laioutr/shopware-laioutr-connector/commit/4eb2b555163680ce31a405837d44bb2852558dd4))
+* pass static analysis against Shopware 6.7.12.1 ([b2a5673](https://github.com/laioutr/shopware-laioutr-connector/commit/b2a5673fa437bf15cd06942eb4535d006ed00137))
+
 ## [1.1.0](https://github.com/laioutr/shopware-laioutr-connector/compare/v1.0.0...v1.1.0) (2026-08-25)
 
 
