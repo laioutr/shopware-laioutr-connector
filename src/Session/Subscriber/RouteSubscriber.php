@@ -33,7 +33,6 @@ class RouteSubscriber implements EventSubscriberInterface
         'frontend.account.payment.save',
     ];
 
-
     public function __construct(
         private readonly CallbackRedirector $callbackRedirector,
         private readonly SystemConfigService $systemConfigService,
