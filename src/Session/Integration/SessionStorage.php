@@ -44,7 +44,9 @@ class SessionStorage
         return $this->get(self::FINISH_SUCCESS_CALLBACK_KEY);
     }
 
-    /** An empty value clears the target, so a checkout that carries none cannot inherit a stale one. */
+    /**
+     * An empty value clears the target, so a checkout that carries none cannot inherit a stale one.
+     */
     public function setFinishSuccessCallback(?string $callback): void
     {
         $this->set(self::FINISH_SUCCESS_CALLBACK_KEY, $callback ?? '');
