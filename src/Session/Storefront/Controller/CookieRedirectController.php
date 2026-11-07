@@ -8,9 +8,7 @@ use Laioutr\Connector\Session\Business\DomainWhitelistValidator;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
 
-#[Route(defaults: ['_routeScope' => ['storefront']])]
 class CookieRedirectController
 {
     public function __construct(
@@ -18,11 +16,6 @@ class CookieRedirectController
     ) {
     }
 
-    #[Route(
-        path: '/laioutr/cookie-bridge',
-        name: 'frontend.laioutr.cookie-bridge',
-        methods: ['GET'],
-    )]
     public function cookieRedirect(Request $request): Response
     {
         $redirectUrl = $request->query->all()['redirect-route'] ?? null;

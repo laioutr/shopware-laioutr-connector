@@ -1,7 +1,36 @@
-laioutr_connector:
-    resource: ../../Session/Storefront/Controller/*Controller.php
-    type: attribute
+# Declared here rather than as controller attributes: Shopware 6.5 ships Symfony 6.3, which has no
+# Routing\Attribute\Route, and Symfony 7.4 deprecates the Routing\Annotation\Route that 6.3 reads.
+frontend.laioutr.connect-session:
+    path: /laioutr/connect-session
+    controller: Laioutr\Connector\Session\Storefront\Controller\ConnectController::connectSession
+    methods: [GET]
+    defaults:
+        _routeScope: [storefront]
 
-laioutr_connector_store_api:
-    resource: ../../Session/StoreApi/Controller/*Controller.php
-    type: attribute
+frontend.laioutr.checkout-order:
+    path: /laioutr/checkout-order
+    controller: Laioutr\Connector\Session\Storefront\Controller\ConnectController::checkoutOrder
+    methods: [POST]
+    defaults:
+        _routeScope: [storefront]
+
+frontend.laioutr.cookie-bridge:
+    path: /laioutr/cookie-bridge
+    controller: Laioutr\Connector\Session\Storefront\Controller\CookieRedirectController::cookieRedirect
+    methods: [GET]
+    defaults:
+        _routeScope: [storefront]
+
+store-api.laioutr.session-handoff:
+    path: /store-api/laioutr/session-handoff
+    controller: Laioutr\Connector\Session\StoreApi\Controller\SessionHandoffController::issue
+    methods: [POST]
+    defaults:
+        _routeScope: [store-api]
+
+store-api.laioutr.session-adopt:
+    path: /store-api/laioutr/session-adopt
+    controller: Laioutr\Connector\Session\StoreApi\Controller\SessionAdoptController::adopt
+    methods: [POST]
+    defaults:
+        _routeScope: [store-api]

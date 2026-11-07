@@ -9,9 +9,7 @@ use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\Routing\Attribute\Route;
 
-#[Route(defaults: ['_routeScope' => ['store-api']])]
 class SessionAdoptController
 {
     public function __construct(
@@ -19,11 +17,6 @@ class SessionAdoptController
     ) {
     }
 
-    #[Route(
-        path: '/store-api/laioutr/session-adopt',
-        name: 'store-api.laioutr.session-adopt',
-        methods: ['POST'],
-    )]
     public function adopt(Request $request, SalesChannelContext $context): JsonResponse
     {
         $code = $request->request->get('code');

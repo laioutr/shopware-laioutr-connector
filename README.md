@@ -6,8 +6,8 @@ Standalone Shopware 6 plugin for integrating Shopware with Laioutr.
 
 ## Requirements
 
-- PHP 8.2–8.5
-- Shopware 6.6–6.7
+- PHP 8.1–8.5
+- Shopware 6.5–6.7
 - Shopware Storefront
 
 ## Installation

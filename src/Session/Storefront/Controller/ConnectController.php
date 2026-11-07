@@ -13,12 +13,10 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Exception\MissingMandatoryParametersException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-#[Route(defaults: ['_routeScope' => ['storefront']])]
 class ConnectController
 {
     private const ORDER_ROUTE = 'frontend.checkout.finish.order';
@@ -32,11 +30,6 @@ class ConnectController
     ) {
     }
 
-    #[Route(
-        path: '/laioutr/connect-session',
-        name: 'frontend.laioutr.connect-session',
-        methods: ['GET'],
-    )]
     public function connectSession(Request $request, SalesChannelContext $context): Response
     {
         $code = $this->getRequiredQueryParameter($request, 'code');
@@ -78,11 +71,6 @@ class ConnectController
      * so it forwards to the route that can still take payment for it. Ownership is not checked
      * here — the target route only pays an order belonging to the session installed above.
      */
-    #[Route(
-        path: '/laioutr/checkout-order',
-        name: 'frontend.laioutr.checkout-order',
-        methods: ['POST'],
-    )]
     public function checkoutOrder(Request $request, SalesChannelContext $context): Response
     {
         $code = $this->getRequiredBodyParameter($request, 'code');
