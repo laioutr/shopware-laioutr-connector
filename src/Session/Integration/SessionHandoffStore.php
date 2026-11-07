@@ -139,9 +139,9 @@ class SessionHandoffStore
         // The column is free-form JSON, so an entry that is not a string pair cannot be trusted
         // as a route parameter; dropping it leaves URL generation to fail closed on what remains.
         $params = [];
-        foreach ($decoded as $key => $value) {
-            if (\is_string($key) && \is_string($value)) {
-                $params[$key] = $value;
+        foreach ($decoded as $key => $param) {
+            if (\is_string($key) && \is_string($param)) {
+                $params[$key] = $param;
             }
         }
 

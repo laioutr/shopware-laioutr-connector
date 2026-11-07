@@ -32,7 +32,7 @@ class CheckoutReturnSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @return array<string, array<int, array{0: string, 1: int}>>
+     * @return array<string, list<array{0: string, 1?: int}>>
      */
     public static function getSubscribedEvents(): array
     {
