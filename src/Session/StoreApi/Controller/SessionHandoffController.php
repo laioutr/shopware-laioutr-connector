@@ -11,9 +11,7 @@ use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\Routing\Attribute\Route;
 
-#[Route(defaults: ['_routeScope' => ['store-api']])]
 class SessionHandoffController
 {
     public function __construct(
@@ -23,11 +21,6 @@ class SessionHandoffController
     ) {
     }
 
-    #[Route(
-        path: '/store-api/laioutr/session-handoff',
-        name: 'store-api.laioutr.session-handoff',
-        methods: ['POST'],
-    )]
     public function issue(Request $request, SalesChannelContext $context): JsonResponse
     {
         $loginSuccessCallback = $this->getRequiredBodyParameter($request, 'login-success-callback');

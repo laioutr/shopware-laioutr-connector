@@ -10,6 +10,7 @@ use Shopware\Core\Framework\Plugin;
 use Shopware\Core\Framework\Plugin\Context\UninstallContext;
 use Shopware\Core\Framework\Plugin\Context\UpdateContext;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class LaioutrConnector extends Plugin
 {
@@ -28,6 +29,8 @@ class LaioutrConnector extends Plugin
             return;
         }
 
+        // Shopware 6.5.0 documents the property as never null, later releases as nullable.
+        /** @var ContainerInterface|null $container */
         $container = $this->container;
         if ($container === null) {
             throw new \RuntimeException('Cannot uninstall Laioutr Connector: the DI container is not available.');
@@ -49,6 +52,8 @@ class LaioutrConnector extends Plugin
      */
     private function seedLockdownFromEmbeddedMode(): void
     {
+        // Shopware 6.5.0 documents the property as never null, later releases as nullable.
+        /** @var ContainerInterface|null $container */
         $container = $this->container;
         if ($container === null) {
             return;

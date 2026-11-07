@@ -47,6 +47,7 @@ jobs:
               run: shopware-cli extension format --dry-run .
 
             - name: Validate lowest Shopware compatibility
+              if: ${{ success() || failure() }}
               run: >-
                   shopware-cli extension validate
                   --full
@@ -69,6 +70,15 @@ jobs:
         with:
             extensionName: LaioutrConnector
             shopwareVersion: "v6.7.12.1"
+
+    # The PHPUnit suite targets PHPUnit 12, which Shopware 6.5's test traits predate, so 6.5 is
+    # covered by static analysis only.
+    phpstan-6-5:
+        name: PHPStan (Shopware 6.5)
+        uses: shopware/github-actions/.github/workflows/phpstan.yml@7c398bdcf7f564f2885758094e11b3b6d8b9b699
+        with:
+            extensionName: LaioutrConnector
+            shopwareVersion: "v6.5.8.19"
 
     phpunit:
         name: PHPUnit (Shopware ${{ matrix.shopware }}, PHP 8.4)

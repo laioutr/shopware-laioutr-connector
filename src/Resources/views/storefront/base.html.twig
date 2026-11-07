@@ -26,7 +26,8 @@
                 src="{{ asset('bundles/laioutrconnector/laioutr-embed.js') }}"
                 data-laioutr-embed
                 data-route="{{ activeRoute }}"
-                data-navigation-id="{{ shopware.navigation.id }}"
+                {# Shopware 6.5 has no `shopware.navigation`; its header pagelet carries the same id. #}
+                data-navigation-id="{{ shopware.navigation.id ?? page.header.navigation.active.id }}"
                 data-sales-channel-id="{{ context.salesChannelId }}"
                 data-allowed-origins="{{ config('LaioutrConnector.config.callbackDomainWildcard') }}"
                 data-checkout-order-url="{{ path('frontend.laioutr.checkout-order') }}"

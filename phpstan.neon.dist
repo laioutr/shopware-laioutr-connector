@@ -8,9 +8,11 @@ parameters:
         - src
 
     ignoreErrors:
-        # Shopware 6.7 marks set() and setMultiple() deprecated only because 6.8 adds an optional
-        # parameter to them; there is nothing to migrate to. Releases without the notice match nothing.
+        # Shopware tags these deprecated to announce a signature change, not a removal, so there is
+        # nothing to migrate to: 6.7's SystemConfigService::set() gains an optional parameter in 6.8,
+        # and 6.5's CustomerLoginEvent drops an interface in 6.6. Matched by message, not identifier,
+        # because the deprecation rules PHPStan 1.x runs on 6.5 do not identify every error. Releases
+        # without a given tag match nothing.
         -
-            identifier: method.deprecated
-            message: '#reason:new-optional-parameter#'
+            message: '#reason:(new-optional-parameter|class-hierarchy-change)\b#'
             reportUnmatched: false
